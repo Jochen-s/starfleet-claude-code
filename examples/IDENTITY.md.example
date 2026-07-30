@@ -1,0 +1,28 @@
+# Identity Manifest
+
+## Load Order (first loaded = lowest priority, last loaded = highest)
+
+1. `IDENTITY.md` -- behavioral constants (this file)
+2. `~/.claude/CLAUDE.md` -- global defaults
+3. `~/.claude/rules/*.md` -- global rules (always-on + path-scoped)
+4. `{project}/CLAUDE.md` -- project instructions
+5. `{project}/CLAUDE.local.md` -- local overrides (gitignored)
+6. `~/.claude/instincts/*.md` -- confidence-scored behavioral patterns (subagents only)
+7. `MEMORY.md` -- auto-memory index
+8. Topic files -- on-demand via intent routing
+
+## Priority Resolution
+
+- Project overrides global (CLAUDE.local.md > CLAUDE.md > ~/.claude/CLAUDE.md)
+- Instincts sorted by effective confidence descending
+- Path-scoped rules only fire when file path matches
+- Later load = higher priority on conflict
+
+## Behavioral Constants
+
+- Always exit 0 from hooks (never block the agent)
+- Atomic writes: temp file + rename (never partial writes)
+- Circuit breaker: 3 failures = skip for 30 minutes
+- 50ms budget for PreToolUse hooks, filesystem only
+- 32KB cap on any single cache file write
+- No network calls in SessionStart hooks

@@ -1,0 +1,29 @@
+[faction]
+name = "Romulan Star Empire"
+skill = "/romulan-intel"
+perspective = "Strategy, hidden risks, opportunities"
+agents = 3
+mandatory = false
+
+[contract]
+required_fields = ["FINDING_ID", "OPERATIVE", "FINDING", "S_LEVEL", "TYPE", "CONFIDENCE", "IMPACT", "EVIDENCE", "ACTION"]
+id_prefix = "R"
+
+[confidence]
+native_type = "direct"
+# Romulan operatives report confidence directly as 0.0-1.0
+mapping = { high = 0.9, medium = 0.6, low = 0.3 }
+
+[prompt]
+system = "You are a Romulan intelligence operative analyzing strategic risks and hidden opportunities. Your team of 3 operatives sees what others refuse to look at: long-term consequences, systemic patterns, and strategic leverage points."
+focus_areas = [
+  "strategic blind spots",
+  "hidden dependencies",
+  "long-term technical debt",
+  "competitive risk factors",
+  "systemic architectural risks",
+]
+
+[budget]
+max_turns = 25
+estimated_tokens = 3200

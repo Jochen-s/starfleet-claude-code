@@ -1,0 +1,73 @@
+# Experiment Loop State File
+# Created at Phase 0, updated each iteration, finalized at Phase 2
+# Dual-purpose: human-readable status + agent recovery after compaction
+#
+# To resume from this file after session loss:
+# 1. Read this file to restore all tracking variables
+# 2. Read experiment-log.tsv for full iteration history
+# 3. Check git log in worktree for kept commits
+# 4. Resume from the phase/step indicated in recovery.resume_from
+
+experiment_id: "<slug-from-goal>"
+goal: "<optimization goal>"
+file: "<target file path>"
+metric: "<metric command>"
+direction: "<lower|higher>"
+started: "<ISO8601>"
+last_updated: "<ISO8601>"
+status: "<setup|running|complete|failed>"
+phase: "<0-setup|1-loop|2-exit>"
+
+baseline:
+  median: 0.0
+  stddev: 0.0
+  variance_threshold: 0.0
+  raw_scores: [0.0, 0.0, 0.0]
+
+budget:
+  max_iterations: 20
+  time_budget_minutes: 30
+  stagnation_limit: 5
+
+current_best:
+  score: 0.0
+  iteration: 0
+  description: "baseline"
+
+# Pareto frontier: multiple kept candidates (max 5)
+candidates:
+  - score: 0.0
+    iteration: 0
+    tag: "experiment-baseline"
+    description: "baseline"
+
+progress:
+  iteration_count: 0
+  kept: 0
+  discarded: 0
+  skipped: 0
+  stagnation_count: 0
+  eval_failure_consecutive: 0  # resets on success; triggers circuit breaker at 3
+  eval_failure_total: 0        # cumulative across all iterations
+
+# Trajectory: annotated delta per iteration (append-only)
+# Each entry captures the full iteration context for recovery
+trajectory: []
+# Example entry:
+# - iteration: 1
+#   timestamp: "2026-03-28T10:00:00Z"
+#   score: 0.045
+#   delta_from_baseline: -0.007
+#   delta_from_best: -0.007
+#   action: "keep"
+#   description: "Replaced bubble sort with quicksort"
+#   lesson: "WIN: quicksort improved by 0.007 due to O(n log n) vs O(n^2)"
+#   diagnostics:
+#     stderr_summary: "no warnings"
+#     exit_code: 0
+
+recovery:
+  last_checkpoint: "phase-0-setup"
+  resume_from: "Start Phase 1 iteration 1"
+  worktree_path: ".claude/worktrees/experiment-loop"
+  start_time: "<ISO8601>"  # needed to recalculate elapsed time on recovery

@@ -1,0 +1,83 @@
+# Deep Research State File
+# Created at Phase 1 (Calibrate), updated through Phase 5 (Synthesize)
+# Dual-purpose: human-readable status + agent recovery after compaction
+#
+# To resume from this file after session loss:
+# 1. Read this file (research-state.yaml) to restore research context, band status, and progress
+# 2. Read plan.md task ledger for band-level progress tracking
+# 3. Read band files for partial findings (check lines count vs focus questions)
+# 4. Check findings.md for post-synthesis recovery (only exists if Phase 5 started)
+# 5. Check verification_log in this file for claim sweep status
+# 6. Resume from the phase/step indicated in recovery.resume_from
+
+research_id: "<topic-slug>"
+question: "<research question>"
+started: "<ISO8601>"
+last_updated: "<ISO8601>"
+status: "<calibrating|deploying|monitoring|rescuing|synthesizing|complete|failed>"
+phase: "<1-calibrate|2-deploy|3-monitor|4-rescue|5-synthesize>"
+output_directory: "research/<topic-slug>/"
+
+bands:
+  total: 0
+  completed: 0
+  stuck: 0
+  incomplete: 0
+  details: []
+  # Example entry:
+  # - number: 1
+  #   name: "Architecture Patterns"
+  #   slug: "architecture-patterns"
+  #   status: "waiting"  # waiting|in_progress|complete|stuck|incomplete
+  #   file: "research/<slug>/band-1-architecture-patterns.md"
+  #   lines: 0
+  #   focus_questions_total: 3
+  #   focus_questions_answered: 0
+
+# Direction decision history (append-only)
+directions: []
+# Example entry:
+# - decision: "CONCLUDE"
+#   rationale: "All focus questions answered with T1-T2 evidence"
+#   confidence: 0.85
+#   timestamp: "2026-03-28T10:30:00Z"
+pivot_count: 0
+
+# Task ledger: tracks what needs to be done and current status
+task_ledger: []
+# Example entry:
+# - id: "T1"
+#   description: "Research architecture patterns in LLM agents"
+#   assigned_to: "band-1"
+#   status: "pending"  # pending|in_progress|complete|blocked|stuck
+#   completed_at: null
+
+# Verification log: tracks claim verification status
+verification_log: []
+# Example entry:
+# - claim: "LLM agents score 20-40 on ResearchClawBench"
+#   source: "https://arxiv.org/abs/2602.18920"
+#   evidence_grade: "T2"
+#   status: "grounded"  # grounded|inferred|ungrounded
+#   band: 2
+
+# Key findings summary for recovery (populated during synthesis)
+findings_summary: []
+# Example entry:
+# - finding: "Two-loop architecture outperforms single-pass for complex research"
+#   confidence: "HIGH"
+#   evidence_grade: "T2"
+#   source_bands: [1, 3]
+
+# Claim sweep results (populated pre-delivery)
+claim_sweep:
+  grounded: 0
+  inferred: 0
+  ungrounded: 0
+  flagged_claims: []
+
+recovery:
+  last_checkpoint: "phase-1-calibrate"
+  resume_from: "Present decomposition plan to user"
+  band_files_written: []
+  synthesis_started: false

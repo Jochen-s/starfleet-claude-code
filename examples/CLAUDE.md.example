@@ -1,0 +1,72 @@
+# Global Defaults
+
+Place this file at `~/.claude/CLAUDE.md` to set defaults across all projects.
+Override per-project with `{project}/CLAUDE.md` or `{project}/CLAUDE.local.md`.
+
+## Core Rules
+
+- Read before modifying. Check active context files first.
+- Minimal focused changes. No unrequested features. Use `file:line` references.
+- NEVER hardcode secrets. Use environment variables or secure storage.
+
+## Workflow Defaults
+
+**Task Management**: For tasks with 3+ steps, create a task list before starting.
+Mark tasks in_progress/completed as you go. Tasks survive compaction -- they are
+your recovery insurance.
+
+**Quality Gates** (escalating -- 8 levels, objective triggers):
+
+| Level | Gate | Auto-trigger |
+|-------|------|--------------|
+| L1 | Self-check | Every change |
+| L2 | Peer review | 3+ files changed |
+| L3 | Opponent's view | Design choice |
+| L4 | Deep review | Auth/crypto/secrets |
+| L5 | Standard command | 5+ files or user-facing |
+| L6 | Adversarial debate | 10+ files changed |
+| L7 | Full command | Architecture decisions |
+| L8 | Bridge briefing | Irreversible changes |
+
+**Before "done"**: Always verify the change works as intended.
+**Creative work**: Use brainstorming techniques (multiple options before committing).
+**Bugs**: Use systematic debugging (reproduce, isolate, fix, verify).
+**Plans**: Write plans before implementing complex changes.
+
+## Subagent Defaults
+
+Assign roles by capability:
+- `haiku` = fast search and analysis tasks
+- `sonnet` (worker) = code generation and implementation
+- `sonnet` (reviewer) = code review and quality checks
+- General purpose = research and exploration
+
+Use disjoint file sets for parallel agents to prevent conflicts.
+
+## Self-Learning
+
+Use a knowledge base system to capture learnings across sessions:
+- Capture on session end or compaction
+- Route by topic to keep files manageable
+- Index file stays under 200 lines
+- Detail files loaded on demand, not always-on
+
+## Overrides
+
+Project CLAUDE.md overrides these defaults. Create `CLAUDE.local.md`
+(gitignored) for machine-specific settings like paths and preferences.
+
+### Example CLAUDE.local.md
+
+```markdown
+# Local Configuration
+
+## Preferences
+- Verbosity: concise
+- Indentation: 2 spaces
+- Auto-commit: no
+- Primary terminal: bash
+
+## Local Environment
+PROJECT_ROOT=<your-project-path>
+```

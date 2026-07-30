@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "K-LEAN Entry V3.4",
+  "description": "Schema for Knowledge DB entries. Soft validation: warns on violations, does not block writes.",
+  "type": "object",
+  "required": ["title", "insight", "type", "priority", "keywords", "source"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+      "description": "Unique entry identifier"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 80,
+      "minLength": 1,
+      "description": "Short descriptive title naming the specific thing"
+    },
+    "insight": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 500,
+      "description": "2-4 sentences with specific details and grounding"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["warning", "solution", "pattern", "finding", "decision", "discovery"],
+      "description": "Entry classification"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Importance level"
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "3-5 search terms"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "file:path:line, git:hash, conv:date, or url"
+    },
+    "memory_type": {
+      "type": "string",
+      "enum": ["semantic", "procedural", "episodic", "preference"],
+      "description": "Knowledge classification"
+    },
+    "decay_class": {
+      "type": "string",
+      "enum": ["volatile", "stable", "permanent"],
+      "description": "Temporal stability classification"
+    },
+    "related_to": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]{1,64}$"
+      },
+      "description": "IDs of related entries (shell-safe regex enforced)"
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]{1,64}$"
+      },
+      "description": "IDs of prerequisite entries (shell-safe regex enforced)"
+    },
+    "confidence": {
+      "oneOf": [
+        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        { "type": "null" }
+      ],
+      "description": "Confidence score 0.0-1.0 or null"
+    },
+    "last_validated": {
+      "oneOf": [
+        { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        { "type": "null" }
+      ],
+      "description": "ISO date of last validation or null"
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO datetime of entry creation"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Session identifier"
+    },
+    "utility_score": {
+      "oneOf": [
+        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        { "type": "null" }
+      ],
+      "description": "Q-value tracking how often this entry led to successful outcomes. Updated via EMA: Q_new = Q_old + alpha * (reward - Q_old). Default null (unscored)."
+    },
+    "retrieval_count": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "null" }
+      ],
+      "description": "Number of times this entry was retrieved for use in a session. Tracks usage frequency for staleness detection."
+    },
+    "salience_score": {
+      "oneOf": [
+        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        { "type": "null" }
+      ],
+      "description": "Pre-storage salience score (0.0-1.0). Computed at capture time from 5 signals: specificity, novelty, actionability, groundedness, priority. SNARC-inspired: filter noise at capture, not retrieval."
+    },
+    "last_retrieved": {
+      "oneOf": [
+        { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}" },
+        { "type": "null" }
+      ],
+      "description": "ISO datetime of last retrieval for use in a session. Enables time-based decay of entries that were used heavily in the past but not recently."
+    },
+    "decision_type": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["architectural", "tactical", "policy", "quality-gate"]
+        },
+        { "type": "null" }
+      ],
+      "description": "Decision classification. Only set when type='decision'."
+    },
+    "causal_chain": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]{1,64}$"
+      },
+      "description": "IDs of K-LEAN entries that led to this decision. Enables 'why did we decide X?' traversal."
+    },
+    "supersedes": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,64}$"
+        },
+        { "type": "null" }
+      ],
+      "description": "ID of entry this decision replaces. The superseded entry remains in the DB but is marked as evolved."
+    },
+    "valid_until": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        { "type": "null" }
+      ],
+      "description": "ISO date when this decision should be re-evaluated. Consolidation script flags expired decisions."
+    }
+  },
+  "additionalProperties": true
+}

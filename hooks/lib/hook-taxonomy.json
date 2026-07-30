@@ -1,0 +1,342 @@
+{
+  "_version": "1.0.0",
+  "_description": "Hook classification for effort-based gating. NEVER_GATE hooks always fire regardless of profile. QUALITY hooks are gated in 'quick' profile. OBSERVABILITY hooks are gated in 'quick' and 'standard' profiles. INFRASTRUCTURE hooks always fire (session lifecycle). KLEAN hooks follow K-LEAN-specific gating rules.",
+  "_updated": "2026-04-04",
+  "_budget": {
+    "max_hooks_per_event": 15,
+    "max_hooks_total": 70,
+    "max_injection_tokens_per_turn": 1000,
+    "current_total": 65
+  },
+  "hooks": {
+    "auto-recall": {
+      "class": "QUALITY",
+      "event": "UserPromptSubmit",
+      "reason": "K-LEAN auto-recall injection per turn"
+    },
+    "done-criteria-check": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Compound task completion nudge"
+    },
+    "protect-secrets": {
+      "class": "NEVER_GATE",
+      "event": "PreToolUse",
+      "reason": "Blocks secrets access"
+    },
+    "subagent-tool-guard": {
+      "class": "NEVER_GATE",
+      "event": "PreToolUse",
+      "reason": "Guards subagent tool access"
+    },
+    "fragility-hook": {
+      "class": "NEVER_GATE",
+      "event": "PreToolUse",
+      "reason": "Risk assessment, Station escalation"
+    },
+    "containment-field": {
+      "class": "NEVER_GATE",
+      "event": "PreToolUse",
+      "reason": "Edit scope restriction"
+    },
+    "codex-mcp-guard": {
+      "class": "NEVER_GATE",
+      "event": "PreToolUse",
+      "reason": "Cross-model MCP security"
+    },
+    "instinct-injector": {
+      "class": "NEVER_GATE",
+      "event": "SubagentStart",
+      "reason": "Security-hardened instinct injection"
+    },
+    "permission-logger": {
+      "class": "NEVER_GATE",
+      "event": "PermissionRequest",
+      "reason": "Security audit trail"
+    },
+    "pre-compact-retention": {
+      "class": "NEVER_GATE",
+      "event": "PreCompact",
+      "reason": "State preservation before compaction"
+    },
+    "post-compact-reinjector": {
+      "class": "NEVER_GATE",
+      "event": "SessionStart",
+      "reason": "State restoration after compact"
+    },
+    "failure-recovery": {
+      "class": "NEVER_GATE",
+      "event": "PostToolUseFailure",
+      "reason": "Recovery suggestions at 3+ failures"
+    },
+    "stop-task-checker": {
+      "class": "NEVER_GATE",
+      "event": "Stop",
+      "reason": "Prevents incomplete task stops"
+    },
+    "loop-detector": {
+      "class": "NEVER_GATE",
+      "event": "PostToolUse",
+      "reason": "Prevents infinite loops"
+    },
+    "rtk-rewrite": {
+      "class": "QUALITY",
+      "event": "PreToolUse",
+      "reason": "PR review toolkit rewrite"
+    },
+    "bash-output-limiter": {
+      "class": "QUALITY",
+      "event": "PreToolUse",
+      "reason": "Limits bash output (cache prefix stability)"
+    },
+    "intent-context": {
+      "class": "QUALITY",
+      "event": "PreToolUse",
+      "reason": "Memory topic injection by intent"
+    },
+    "web-cache": {
+      "class": "QUALITY",
+      "event": "PreToolUse+PostToolUse",
+      "reason": "Web result caching"
+    },
+    "annotation-injector": {
+      "class": "QUALITY",
+      "event": "PreToolUse",
+      "reason": "Context7 annotation injection"
+    },
+    "freshness-guard": {
+      "class": "QUALITY",
+      "event": "PreToolUse",
+      "reason": "File freshness validation"
+    },
+    "console-log-warn": {
+      "class": "QUALITY",
+      "event": "PostToolUse",
+      "reason": "Warns about console.log in edits"
+    },
+    "context-threshold-monitor": {
+      "class": "QUALITY",
+      "event": "PostToolUse",
+      "reason": "Hull integrity monitoring"
+    },
+    "auto-fix-diagnostics": {
+      "class": "QUALITY",
+      "event": "PostToolUse",
+      "reason": "Auto-fix suggestions"
+    },
+    "read-budget": {
+      "class": "QUALITY",
+      "event": "PostToolUse",
+      "reason": "Read budget tracking"
+    },
+    "correction-capture": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Captures user corrections"
+    },
+    "claudeception-activator": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Knowledge capture activation"
+    },
+    "auto-reflect-trigger": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Reflection queue trigger"
+    },
+    "gate-tracker": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Quality gate tracking"
+    },
+    "failure-reflection": {
+      "class": "QUALITY",
+      "event": "PostToolUseFailure",
+      "reason": "Reflexion pattern"
+    },
+    "execution-ratio-monitor": {
+      "class": "QUALITY",
+      "event": "PostToolUse",
+      "reason": "Planning ratio warning"
+    },
+    "post-compact-enrichment": {
+      "class": "QUALITY",
+      "event": "PostCompact",
+      "reason": "K-LEAN re-injection (SNARC)"
+    },
+    "captain-log": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "HANDOFF.md generation"
+    },
+    "success-trace-logger": {
+      "class": "QUALITY",
+      "event": "Stop",
+      "reason": "Winning trace archival for learning pipeline"
+    },
+    "skill-usage-tracker": {
+      "class": "OBSERVABILITY",
+      "event": "PreToolUse",
+      "reason": "Skill usage metrics"
+    },
+    "action-logger": {
+      "class": "OBSERVABILITY",
+      "event": "PostToolUse",
+      "reason": "Action logging + friction detection"
+    },
+    "gsd-context-monitor": {
+      "class": "OBSERVABILITY",
+      "event": "PostToolUse",
+      "reason": "GSD context tracking"
+    },
+    "gsd-check-update": {
+      "class": "OBSERVABILITY",
+      "event": "SessionStart",
+      "reason": "GSD version check"
+    },
+    "notification-handler": {
+      "class": "OBSERVABILITY",
+      "event": "Notification",
+      "reason": "Notification routing"
+    },
+    "config-change-handler": {
+      "class": "OBSERVABILITY",
+      "event": "ConfigChange",
+      "reason": "Config change logging"
+    },
+    "task-completed-tracker": {
+      "class": "OBSERVABILITY",
+      "event": "TaskCompleted",
+      "reason": "Task completion tracking"
+    },
+    "subagent-stop-tracker": {
+      "class": "OBSERVABILITY",
+      "event": "SubagentStop",
+      "reason": "Subagent stop tracking"
+    },
+    "session-indexer": {
+      "class": "OBSERVABILITY",
+      "event": "SessionEnd",
+      "reason": "Session indexing"
+    },
+    "tts-marker-hook": {
+      "class": "OBSERVABILITY",
+      "event": "Stop",
+      "reason": "TTS voice markers"
+    },
+    "project-state-loader": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Loads project state"
+    },
+    "memory-size-checker": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Checks memory sizes"
+    },
+    "instruction-surface-measurer": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Measures instruction surface"
+    },
+    "fragility-cache-builder": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Builds fragility cache"
+    },
+    "skills-index-builder": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Builds skills index"
+    },
+    "instinct-decay": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "Decays instinct confidence"
+    },
+    "stt-dedup-guard": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionStart",
+      "reason": "STT dedup guard"
+    },
+    "project-state-saver": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionEnd",
+      "reason": "Saves project state"
+    },
+    "memory-consolidator": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionEnd",
+      "reason": "Consolidates memory"
+    },
+    "session-context-writer": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionEnd",
+      "reason": "Writes session context"
+    },
+    "dotfiles-auto-backup": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionEnd",
+      "reason": "Dotfiles backup"
+    },
+    "task-cleanup": {
+      "class": "INFRASTRUCTURE",
+      "event": "SessionEnd",
+      "reason": "Cleans up tasks"
+    },
+    "kln-prompt-guard": {
+      "class": "KLEAN",
+      "event": "UserPromptSubmit",
+      "reason": "Short-circuits kln-hook-prompt for <15 char prompts"
+    },
+    "kln-hook-session": {
+      "class": "KLEAN",
+      "event": "SessionStart",
+      "reason": "K-LEAN session init"
+    },
+    "kln-hook-compact": {
+      "class": "KLEAN",
+      "event": "PreCompact",
+      "reason": "K-LEAN compact capture"
+    },
+    "kln-hook-bash": {
+      "class": "KLEAN",
+      "event": "PostToolUse",
+      "reason": "K-LEAN bash capture"
+    },
+    "kln-hook-web": {
+      "class": "KLEAN",
+      "event": "PostToolUse",
+      "reason": "K-LEAN web/context7 capture"
+    }
+  },
+  "gating_rules": {
+    "quick": {
+      "description": "Essential hooks only. QUALITY and OBSERVABILITY gated.",
+      "active_classes": [
+        "NEVER_GATE",
+        "INFRASTRUCTURE",
+        "KLEAN"
+      ]
+    },
+    "standard": {
+      "description": "Most hooks fire. OBSERVABILITY gated.",
+      "active_classes": [
+        "NEVER_GATE",
+        "INFRASTRUCTURE",
+        "KLEAN",
+        "QUALITY"
+      ]
+    },
+    "thorough": {
+      "description": "All hooks fire.",
+      "active_classes": [
+        "NEVER_GATE",
+        "INFRASTRUCTURE",
+        "KLEAN",
+        "QUALITY",
+        "OBSERVABILITY"
+      ]
+    }
+  }
+}

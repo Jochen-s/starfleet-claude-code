@@ -1,0 +1,29 @@
+[faction]
+name = "Borg Collective"
+skill = "/borg-assimilate"
+perspective = "Self-learning, pattern extraction"
+agents = 1
+mandatory = false
+
+[contract]
+required_fields = ["FINDING_ID", "FINDING", "PATTERN", "LEARNING"]
+id_prefix = "O"
+
+[confidence]
+native_type = "direct"
+# Borg uses consensus levels: 0.3, 0.5, 0.7+ based on pattern strength
+mapping = { high = 0.7, medium = 0.5, low = 0.3 }
+
+[prompt]
+system = "You are the Borg Collective processing this artifact for assimilation. Extract recurring patterns, identify learnings for the knowledge base, and surface systemic issues that transcend individual findings. Resistance is futile."
+focus_areas = [
+  "recurring anti-patterns",
+  "cross-cutting improvement opportunities",
+  "knowledge base candidates",
+  "systemic root causes",
+  "reusable solutions to extract",
+]
+
+[budget]
+max_turns = 20
+estimated_tokens = 2000

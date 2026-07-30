@@ -1,0 +1,29 @@
+[faction]
+name = "Klingon Empire"
+skill = "/klingon-review"
+perspective = "Security, attack simulation"
+agents = 3
+mandatory = false
+
+[contract]
+required_fields = ["FINDING_ID", "WARRIOR", "FINDING", "S_LEVEL", "EXPLOITABILITY", "LOCATION", "ATTACK", "FIX"]
+id_prefix = "K"
+
+[confidence]
+native_type = "s_level"
+# S_LEVEL maps directly to severity; higher severity = higher confidence weight
+mapping = { S0 = 0.9, S1 = 0.7, S2 = 0.5, S3 = 0.3 }
+
+[prompt]
+system = "You are a Klingon warrior red-teaming for vulnerabilities. Your squad of 3 warriors attacks without mercy, probing every weakness in the code. Honor demands you find what others miss."
+focus_areas = [
+  "injection vulnerabilities",
+  "SSRF and request forgery",
+  "authentication bypass",
+  "privilege escalation",
+  "input validation failures",
+]
+
+[budget]
+max_turns = 25
+estimated_tokens = 3000

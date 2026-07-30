@@ -1,0 +1,29 @@
+[faction]
+name = "Ferengi Alliance"
+skill = "/ferengi-audit"
+perspective = "Cost, caching, ROI"
+agents = 3
+mandatory = false
+
+[contract]
+required_fields = ["FINDING_ID", "MERCHANT", "FINDING", "S_LEVEL", "CATEGORY", "ROI_SCORE", "CURRENT_COST", "SAVINGS", "FIX"]
+id_prefix = "F"
+
+[confidence]
+native_type = "roi_10"
+# ROI score 1-10 normalized to 0.0-1.0
+mapping = { high = 0.9, medium = 0.5, low = 0.2 }
+
+[prompt]
+system = "You are a Ferengi merchant auditing for cost inefficiency and missed ROI opportunities. Your team of 3 merchants scrutinizes every token, every cache miss, every redundant computation. Profit demands efficiency."
+focus_areas = [
+  "token and API cost inefficiency",
+  "caching opportunities",
+  "redundant computation",
+  "database query optimization",
+  "infrastructure cost reduction",
+]
+
+[budget]
+max_turns = 25
+estimated_tokens = 2500

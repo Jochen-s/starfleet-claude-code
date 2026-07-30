@@ -1,0 +1,88 @@
+{
+  "autoMemoryDirectory": ".claude/memory",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|Bash",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/fragility-hook.js" }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|Bash",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/intent-context.js" }
+        ]
+      },
+      {
+        "matcher": "mcp__context7__query-docs",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/annotation-injector.js" }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/subagent-tool-guard.js" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/action-logger.js", "async": true },
+          { "type": "command", "command": "node ~/.claude/hooks/context-threshold-monitor.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/loop-detector.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/execution-ratio-monitor.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/auto-fix-diagnostics.js" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/instruction-surface-measurer.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/fragility-cache-builder.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/instinct-decay.js" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/captain-log.js", "async": true }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/instinct-injector.js" }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/notification-handler.js" }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/config-change-handler.js" }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS": "15000"
+  }
+}

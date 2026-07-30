@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|Bash",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/fragility-hook.js" }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|Bash",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/intent-context.js" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/action-logger.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/context-threshold-monitor.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/loop-detector.js" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/instruction-surface-measurer.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/fragility-cache-builder.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/instinct-decay.js" }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/instinct-injector.js" }
+        ]
+      }
+    ]
+  }
+}

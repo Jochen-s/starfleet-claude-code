@@ -1,0 +1,101 @@
+{
+  "_version": "1.0.0",
+  "_description": "Domain-specific blind spots injected into fleet reviews and deep research when keyword triggers match. Each entry follows instinct-grade discipline: confidence, last_validated, failure_mode, decay_class. Source: claude-octopus blind-spot library pattern, adapted for Starfleet setup. Assimilation 2026-04-04.",
+  "_updated": "2026-04-04",
+  "_rules": {
+    "min_trigger_keywords": 2,
+    "max_injection_chars": 500,
+    "decay_schedule_days": 90,
+    "auto_expire_after_days": 180
+  },
+  "entries": [
+    {
+      "id": "bs-security-supply-chain",
+      "domain": "security",
+      "confidence": 0.85,
+      "last_validated": "2026-04-04",
+      "failure_mode": "security",
+      "decay_class": "slow",
+      "trigger_keywords": ["dependency", "npm", "package", "supply-chain", "install", "plugin"],
+      "blind_spot": "Supply chain attacks via compromised dependencies. Check: pinned versions? lockfile integrity? known CVEs in transitive deps? Pre/post-install scripts reviewed?",
+      "source": "OWASP Top 10 + claude-octopus blind-spots/security.json"
+    },
+    {
+      "id": "bs-security-injection",
+      "domain": "security",
+      "confidence": 0.90,
+      "last_validated": "2026-04-04",
+      "failure_mode": "security",
+      "decay_class": "slow",
+      "trigger_keywords": ["hook", "additionalContext", "injection", "stdin", "input", "user_message"],
+      "blind_spot": "Prompt injection via hook additionalContext or user-supplied content stored in memory. Check: are inputs sanitized before injection? Could stored memories contain adversarial prompts? Is there a boundary between trusted and untrusted content?",
+      "source": "instinct-injector Unicode sanitization incident + mnemory boundary tags"
+    },
+    {
+      "id": "bs-security-secrets-in-context",
+      "domain": "security",
+      "confidence": 0.92,
+      "last_validated": "2026-04-04",
+      "failure_mode": "security",
+      "decay_class": "slow",
+      "trigger_keywords": ["env", "secret", "credential", "token", "api-key", "password"],
+      "blind_spot": "Secrets leaking into conversation context, K-LEAN entries, or auto-memory files. Check: does protect-secrets hook cover this path? Could subagents access credentials via cached files? Are secrets in env vars visible to hook child processes?",
+      "source": "protect-secrets hook + secrets-and-ops-safety instinct"
+    },
+    {
+      "id": "bs-architecture-hook-interaction",
+      "domain": "architecture",
+      "confidence": 0.80,
+      "last_validated": "2026-04-04",
+      "failure_mode": "system-integrity",
+      "decay_class": "medium",
+      "trigger_keywords": ["hook", "cache", "shared", "state", "race", "concurrent"],
+      "blind_spot": "Hook-to-hook interaction via shared cache files. 63 hooks share files like session-checkpoint.json, metabolic-state.json, recent-actions.jsonl. Check: TOCTOU on shared files? Atomic writes (tmp+rename)? Stale state from previous session? Cross-hook ordering assumptions?",
+      "source": "Setup v3 TOCTOU fixes + adversarial review 2026-04-04"
+    },
+    {
+      "id": "bs-architecture-cache-prefix",
+      "domain": "architecture",
+      "confidence": 0.75,
+      "last_validated": "2026-04-04",
+      "failure_mode": "context-drift",
+      "decay_class": "medium",
+      "trigger_keywords": ["cache", "token", "additionalContext", "inject", "prefix", "caching"],
+      "blind_spot": "Non-deterministic hook output breaks prompt caching. Hooks injecting timestamps, counters, or changing measurements via additionalContext change the conversation byte sequence, causing cache prefix misses. Check: is injected content deterministic? Could it vary between identical prompts?",
+      "source": "Reddit 7-layer token analysis Layer 4 + adversarial review"
+    },
+    {
+      "id": "bs-api-rate-limiting",
+      "domain": "api",
+      "confidence": 0.70,
+      "last_validated": "2026-04-04",
+      "failure_mode": "context-drift",
+      "decay_class": "medium",
+      "trigger_keywords": ["api", "rate", "limit", "throttle", "429", "retry"],
+      "blind_spot": "Synthetic vs real rate limiting. Claude Code may fabricate client-side rate limits on large transcripts (model: '<synthetic>', zero tokens). Also: Extra Usage cache TTL downgrade from 1h to 5min. Check: is the rate limit genuine (has retry-after header)? Are we in Extra Usage mode?",
+      "source": "Reddit 7-layer token analysis Layers 5+6"
+    },
+    {
+      "id": "bs-data-encoding",
+      "domain": "data",
+      "confidence": 0.85,
+      "last_validated": "2026-04-04",
+      "failure_mode": "context-drift",
+      "decay_class": "fast",
+      "trigger_keywords": ["file", "read", "encoding", "unicode", "windows", "utf"],
+      "blind_spot": "Windows cp1252 vs UTF-8 encoding mismatch. Python on Windows defaults to cp1252, not UTF-8. JSON/JSONL files with non-ASCII characters (em dashes, smart quotes, emoji) will crash without explicit encoding='utf-8'. Check: all file opens specify encoding? MINGW64 HOME vs USERPROFILE path?",
+      "source": "K-LEAN entries.jsonl cp1252 crash 2026-04-04 + platform-fixes"
+    },
+    {
+      "id": "bs-operations-mcp-stall",
+      "domain": "operations",
+      "confidence": 0.75,
+      "last_validated": "2026-04-04",
+      "failure_mode": "system-integrity",
+      "decay_class": "medium",
+      "trigger_keywords": ["mcp", "server", "timeout", "stall", "hang", "connection"],
+      "blind_spot": "MCP servers that do startup health checks fail silently: no tools exposed, no error in Claude Code UI. Also: MCP connections can stall mid-session without detection. Check: is MCP_TIMEOUT set? Does the server have a health endpoint? Any heartbeat/liveness mechanism?",
+      "source": "n8n-ops MCP incident + mem0 MCP incident + claude-octopus heartbeat pattern"
+    }
+  ]
+}

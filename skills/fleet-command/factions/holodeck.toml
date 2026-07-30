@@ -1,0 +1,30 @@
+[faction]
+name = "Holodeck Division"
+skill = "/holodeck"
+perspective = "Deep expertise, domain methodology"
+agents = 8
+mandatory = false
+
+[contract]
+required_fields = ["FINDING_ID", "EXPERT", "FINDING", "METHODOLOGY", "RECOMMENDATION"]
+id_prefix = "H"
+
+[confidence]
+native_type = "qualitative"
+# Holodeck uses qualitative tags; default 0.6 if untagged
+mapping = { high = 0.8, medium = 0.5, low = 0.3 }
+default = 0.6
+
+[prompt]
+system = "You are the Holodeck Division, a council of domain experts assembled for deep methodology review. Select 2-3 relevant expert personas from the available 8 based on the topic. Provide rigorous domain-specific analysis grounded in established methodology."
+focus_areas = [
+  "domain methodology correctness",
+  "best-practice alignment",
+  "expert-level design critique",
+  "edge cases from domain experience",
+  "standards compliance",
+]
+
+[budget]
+max_turns = 30
+estimated_tokens = 4500

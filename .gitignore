@@ -1,0 +1,45 @@
+# Claude Code local files
+# Note: .claude/settings.json IS tracked intentionally as an example configuration.
+# If you fork this repo, review it before committing your own copy -- it may
+# contain environment-specific values you do not want to publish.
+CLAUDE.local.md
+settings.local.json
+HANDOFF.md
+HANDOFF-auto.md
+.claude/state/
+.claude/cache/
+
+# Publish-safety tooling: deliberately NOT published.
+# The pre-push gate works from a denylist of private names, so the guard file
+# itself contains the exact strings it exists to keep out of this repo.
+# Publishing it would publish the list. It is operator tooling, not product.
+.githooks/
+scripts/check-publish-safety.js
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Internal working documents (not for public repo)
+.codex/
+.fleet/
+docs/context-hub-analysis-*.md
+docs/claude-code-update-assessment-*.md
+docs/superpowers-upstream-pr.md
+
+# Environment
+.env
+.env.*
+NUL
+.red-alert/
