@@ -20,7 +20,11 @@ const C={bg:'#40318D',fg:'#7869C4',white:'#FFFFFF',black:'#000000',red:'#883932'
          green:'#55A049',yellow:'#BFCE72',orange:'#8B5429',lblue:'#7869C4',grey:'#9F9F9F'};
 const cv=document.getElementById('c'),g=cv.getContext('2d');
 const COLS=40,ROWS=25,CW=8,CH=8;
-let mode='basic', lines=[], input='', blink=0, game=null, raf=0;
+let mode='basic', lines=[], input='', blink=0, game=null, raf=0, loadT=0;
+const border=document.getElementById('border');
+const STRIPES=['#000000','#FFFFFF','#867ADE','#40318D','#67B6BD','#BFCE72','#883932','#55A049'];
+function flicker(){const b=[];for(let i=0;i<24;i++){const c=STRIPES[(Math.random()*8)|0];b.push(`${c} ${i/24*100}% ${(i+1)/24*100}%`);}
+  border.style.background=`linear-gradient(${b.join(',')})`;}
 
 function text(x,y,s,col){g.fillStyle=col||C.fg;g.font='8px "Courier New",monospace';g.textBaseline='top';
   for(let i=0;i<s.length;i++)g.fillText(s[i],x*CW,y*CH+1);}
@@ -34,7 +38,9 @@ function print(s){lines.push(s);while(lines.length>ROWS-2)lines.shift();}
 function exec(cmd){print(cmd);cmd=cmd.trim().toUpperCase();
   const m=cmd.match(/^(\d)$|LOAD "?(\w+)/);let gm=null;
   if(m){gm=m[1]?GAMES[+m[1]-1]:GAMES.find(x=>x.n===m[2]);}
-  if(gm){print(`LOADING ${gm.n}`);print('READY.');print('RUN');setTimeout(()=>start(gm),400);}
+  if(gm){print(`SEARCHING FOR ${gm.n}`);mode='loading';loadT=0;
+    setTimeout(()=>print('LOADING'),700);
+    setTimeout(()=>{border.style.background='#867ADE';print('READY.');print('RUN');start(gm);},2000);}
   else if(cmd==='LIST'){GAMES.forEach((x,i)=>print(`${i+1}  LOAD "${x.n}",8,1`));print('READY.');}
   else if(cmd==='')print('READY.');
   else{print('?SYNTAX  ERROR');print('READY.');}}
@@ -96,7 +102,7 @@ function Breakout(){let px=136,bx=160,by=150,vx=1.5,vy=-2,score=0,lives=3,bricks
     g.fillStyle=C.white;g.fillRect(px,188,48,4);g.fillStyle=C.yellow;g.fillRect(bx-2,by-2,4,4);}};}
 
 // ---------- Main loop ----------
-function loop(){if(mode==='game'&&game){game.step();if(game)game.draw();}else drawBasic();raf=requestAnimationFrame(loop);}
+function loop(){if(mode==='game'&&game){game.step();if(game)game.draw();}else{drawBasic();if(mode==='loading'&&!(loadT++%3))flicker();}raf=requestAnimationFrame(loop);}
 boot();loop();
 </script>
 </body>
