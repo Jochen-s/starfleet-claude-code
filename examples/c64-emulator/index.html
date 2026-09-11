@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C64 Mini</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace}
+  #border{background:#867ADE;padding:32px;border-radius:12px;box-shadow:0 0 40px #000}
+  canvas{display:block;background:#40318D;image-rendering:pixelated;width:640px;height:400px;max-width:calc(100vw - 96px)}
+  #hint{color:#888;text-align:center;font-size:12px;position:fixed;bottom:8px;width:100%}
+</style>
+</head>
+<body>
+<div id="border"><canvas id="c" width="320" height="200"></canvas></div>
+<div id="hint">Type a number (1-3) + ENTER to load a game · ESC returns to BASIC · Arrows / WASD to play</div>
+<script>
+// ---------- C64 palette & screen ----------
+const C={bg:'#40318D',fg:'#7869C4',white:'#FFFFFF',black:'#000000',red:'#883932',cyan:'#67B6BD',
+         green:'#55A049',yellow:'#BFCE72',orange:'#8B5429',lblue:'#7869C4',grey:'#9F9F9F'};
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const COLS=40,ROWS=25,CW=8,CH=8;
+let mode='basic', lines=[], input='', blink=0, game=null, raf=0;
+
+function text(x,y,s,col){g.fillStyle=col||C.fg;g.font='8px "Courier New",monospace';g.textBaseline='top';
+  for(let i=0;i<s.length;i++)g.fillText(s[i],x*CW,y*CH+1);}
+function cls(){g.fillStyle=C.bg;g.fillRect(0,0,320,200);}
+
+// ---------- BASIC shell ----------
+const GAMES=[{n:'SNAKE',run:Snake},{n:'PONG',run:Pong},{n:'BREAKOUT',run:Breakout}];
+function boot(){lines=['','    **** COMMODORE 64 BASIC V2 ****','',' 64K RAM SYSTEM  38911 BASIC BYTES FREE','','READY.'];
+  print('LIST');GAMES.forEach((x,i)=>print(`${i+1}  LOAD "${x.n}",8,1`));print('');print('READY.');}
+function print(s){lines.push(s);while(lines.length>ROWS-2)lines.shift();}
+function exec(cmd){print(cmd);cmd=cmd.trim().toUpperCase();
+  const m=cmd.match(/^(\d)$|LOAD "?(\w+)/);let gm=null;
+  if(m){gm=m[1]?GAMES[+m[1]-1]:GAMES.find(x=>x.n===m[2]);}
+  if(gm){print(`LOADING ${gm.n}`);print('READY.');print('RUN');setTimeout(()=>start(gm),400);}
+  else if(cmd==='LIST'){GAMES.forEach((x,i)=>print(`${i+1}  LOAD "${x.n}",8,1`));print('READY.');}
+  else if(cmd==='')print('READY.');
+  else{print('?SYNTAX  ERROR');print('READY.');}}
+function drawBasic(){cls();lines.forEach((l,i)=>text(0,i,l));
+  const y=lines.length;text(0,y,input);
+  if((blink++>>4)&1){g.fillStyle=C.fg;g.fillRect(input.length*CW,y*CH,CW,CH);}}
+
+// ---------- Game framework ----------
+const keys={};
+addEventListener('keydown',e=>{keys[e.key]=true;
+  if(e.key==='Escape'){if(mode==='game'){mode='basic';game=null;print('');print('BREAK');print('READY.');}return;}
+  if(mode==='basic'){if(e.key==='Enter'){exec(input);input='';}
+    else if(e.key==='Backspace')input=input.slice(0,-1);
+    else if(e.key.length===1&&input.length<38)input+=e.key.toUpperCase();
+    e.preventDefault();}
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();});
+addEventListener('keyup',e=>keys[e.key]=false);
+const left=()=>keys.ArrowLeft||keys.a, right=()=>keys.ArrowRight||keys.d, up=()=>keys.ArrowUp||keys.w, down=()=>keys.ArrowDown||keys.s;
+function start(gm){mode='game';game=gm.run();}
+function gameOver(score){print('');print(`GAME OVER - SCORE ${score}`);print('READY.');mode='basic';game=null;}
+function hud(t){g.fillStyle=C.black;g.fillRect(0,0,320,10);text(1,0,t,C.white);}
+
+// ---------- 1. SNAKE ----------
+function Snake(){let s=[[10,12],[9,12],[8,12]],d=[1,0],food=[20,12],score=0,t=0;
+  const rnd=()=>[1+Math.floor(Math.random()*38),2+Math.floor(Math.random()*22)];
+  return{step(){if(left()&&d[0]!==1)d=[-1,0];if(right()&&d[0]!==-1)d=[1,0];if(up()&&d[1]!==1)d=[0,-1];if(down()&&d[1]!==-1)d=[0,1];
+    if(++t%6)return;const h=[s[0][0]+d[0],s[0][1]+d[1]];
+    if(h[0]<0||h[0]>39||h[1]<1||h[1]>24||s.some(p=>p[0]===h[0]&&p[1]===h[1]))return gameOver(score);
+    s.unshift(h);if(h[0]===food[0]&&h[1]===food[1]){score+=10;food=rnd();}else s.pop();},
+  draw(){cls();hud(`SNAKE  SCORE ${score}`);g.fillStyle=C.red;g.fillRect(food[0]*8,food[1]*8,8,8);
+    g.fillStyle=C.green;s.forEach(p=>g.fillRect(p[0]*8+1,p[1]*8+1,6,6));}};}
+
+// ---------- 2. PONG ----------
+function Pong(){let py=90,cy=90,bx=160,by=100,vx=2,vy=1.5,ps=0,cs=0;
+  const reset=()=>{bx=160;by=100;vx=(Math.random()<.5?-2:2);vy=(Math.random()-.5)*3;};
+  return{step(){if(up())py-=3;if(down())py+=3;py=Math.max(10,Math.min(170,py));
+    cy+=Math.sign(by-15-cy)*Math.min(2,Math.abs(by-15-cy));bx+=vx;by+=vy;
+    if(by<10||by>197)vy=-vy;
+    if(bx<14&&by>py&&by<py+30){vx=-vx*1.05;vy+=(by-py-15)/8;}
+    if(bx>302&&by>cy&&by<cy+30){vx=-vx*1.05;vy+=(by-cy-15)/8;}
+    if(bx<0){cs++;reset();}if(bx>320){ps++;reset();}
+    if(ps>=5||cs>=5)gameOver(ps*100);},
+  draw(){cls();hud(`PONG   YOU ${ps}  CPU ${cs}`);g.fillStyle=C.grey;for(let y=12;y<200;y+=12)g.fillRect(159,y,2,6);
+    g.fillStyle=C.white;g.fillRect(10,py,4,30);g.fillRect(306,cy,4,30);g.fillStyle=C.yellow;g.fillRect(bx-2,by-2,4,4);}};}
+
+// ---------- 3. BREAKOUT ----------
+function Breakout(){let px=136,bx=160,by=150,vx=1.5,vy=-2,score=0,lives=3,bricks=[];
+  const cols=[C.red,C.orange,C.yellow,C.green,C.cyan];
+  for(let r=0;r<5;r++)for(let c=0;c<16;c++)bricks.push({x:c*20,y:16+r*8,c:cols[r]});
+  return{step(){if(left())px-=4;if(right())px+=4;px=Math.max(0,Math.min(272,px));bx+=vx;by+=vy;
+    if(bx<2||bx>318)vx=-vx;if(by<12)vy=-vy;
+    if(by>186&&by<192&&bx>px&&bx<px+48){vy=-Math.abs(vy);vx=(bx-px-24)/8;}
+    if(by>200){if(--lives<=0)return gameOver(score);bx=160;by=150;vx=1.5;vy=-2;}
+    for(let i=bricks.length-1;i>=0;i--){const b=bricks[i];
+      if(bx>b.x&&bx<b.x+20&&by>b.y&&by<b.y+8){bricks.splice(i,1);vy=-vy;score+=10;break;}}
+    if(!bricks.length)gameOver(score+lives*100);},
+  draw(){cls();hud(`BREAKOUT  SCORE ${score}  LIVES ${lives}`);
+    bricks.forEach(b=>{g.fillStyle=b.c;g.fillRect(b.x+1,b.y+1,18,6);});
+    g.fillStyle=C.white;g.fillRect(px,188,48,4);g.fillStyle=C.yellow;g.fillRect(bx-2,by-2,4,4);}};}
+
+// ---------- Main loop ----------
+function loop(){if(mode==='game'&&game){game.step();if(game)game.draw();}else drawBasic();raf=requestAnimationFrame(loop);}
+boot();loop();
+</script>
+</body>
+</html>
