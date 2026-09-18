@@ -66,6 +66,32 @@
   #overlay .note { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
   #overlay .stats { font-family: var(--display); font-size: 14px; color: var(--amber); margin: 0 0 14px; letter-spacing: .06em; }
   .hidden { display: none !important; }
+  #overlay { z-index: 10; }
+  /* touch controls (shown only on coarse-pointer devices) */
+  #touch { position: fixed; inset: 0; z-index: 5; touch-action: none; -webkit-user-select: none; user-select: none; font-family: var(--display); }
+  #joy { position: absolute; left: 0; bottom: 0; width: 45%; height: 65%; }
+  #joyBase { position: absolute; width: 124px; height: 124px; border-radius: 50%; border: 2px solid rgba(53,230,255,.5); background: rgba(10,14,30,.35); transform: translate(-50%,-50%); pointer-events: none; }
+  #joyKnob { position: absolute; width: 54px; height: 54px; border-radius: 50%; background: rgba(53,230,255,.6); box-shadow: 0 0 14px rgba(53,230,255,.6); transform: translate(-50%,-50%); pointer-events: none; }
+  #look { position: absolute; right: 0; top: 0; width: 55%; height: 100%; }
+  .tbtn { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: 2px solid rgba(53,230,255,.6); background: rgba(10,14,30,.6); color: var(--ink); font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: .08em; padding: 0; touch-action: none; }
+  .tbtn.on, .tbtn:active { background: rgba(53,230,255,.55); color: #06111a; }
+  #tFire { width: 96px; height: 96px; right: 18px; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); border-color: var(--magenta); font-size: 13px; }
+  #tFire.on, #tFire:active { background: rgba(255,63,164,.6); }
+  #tJump { right: 128px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  #tDash { right: 128px; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+  #tSlide { right: 210px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  #tReload { width: 56px; height: 56px; right: 38px; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); font-size: 10px; }
+  #tPause { position: absolute; left: 14px; top: calc(14px + env(safe-area-inset-top, 0px)); width: 44px; height: 44px; border-radius: 8px; border: 1px solid rgba(53,230,255,.4); background: rgba(10,14,30,.6); color: var(--ink); font-size: 18px; }
+  body.touch .bottom { bottom: auto; top: calc(60px + env(safe-area-inset-top, 0px)); align-items: flex-start; padding-bottom: 0; }
+  body.touch .bottom { padding-inline: 70px 16px; }
+  body.touch #hp { min-width: 0; }
+  body.touch #hpnum { font-size: 18px; }
+  body.touch #ammo .n { font-size: 24px; }
+  body.touch #feed { top: calc(150px + env(safe-area-inset-top, 0px)); right: 16px; }
+  body.touch #crosshair { opacity: .7; }
+  body.touch #overlay .keys { display: none; }
+  #overlay .tkeys { display: none; margin: 0 0 20px; font-size: 15px; line-height: 1.5; }
+  body.touch #overlay .tkeys { display: block; }
   @media (max-width: 600px) {
     .bottom { padding-inline: 16px; }
     #hp { min-width: 0; flex: 1; }
@@ -100,10 +126,21 @@
   </div>
 </div>
 
+<div id="touch" hidden>
+  <div id="joy"><div id="joyBase" hidden></div><div id="joyKnob" hidden></div></div>
+  <div id="look"></div>
+  <button id="tPause" type="button" aria-label="Pause">❚❚</button>
+  <button id="tFire" class="tbtn" type="button">FIRE</button>
+  <button id="tJump" class="tbtn" type="button">JUMP</button>
+  <button id="tDash" class="tbtn" type="button">DASH</button>
+  <button id="tSlide" class="tbtn" type="button">SLIDE</button>
+  <button id="tReload" class="tbtn" type="button">RELOAD</button>
+</div>
+
 <div id="overlay">
   <div class="card">
     <h1>HYPERSHOT <span>ARENA</span></h1>
-    <p class="sub">Fan-made replica map · 5 bots · first to 20 kills</p>
+    <p class="sub">City Arena · fan-made replica · 5 bots · first to 20 kills</p>
     <p class="stats hidden" id="roundStats"></p>
     <dl class="keys">
       <dt><kbd>W A S D</kbd></dt><dd>Move</dd>
@@ -115,8 +152,9 @@
       <dt><kbd>R</kbd></dt><dd>Reload</dd>
       <dt><kbd>Esc</kbd></dt><dd>Release the mouse</dd>
     </dl>
+    <p class="tkeys">Left thumb: drag to move, push far to sprint. Right thumb: drag to look. Buttons: fire, jump (tap twice for a double jump), dash, slide, reload. Landscape works best.</p>
     <button id="play" type="button">Click to deploy</button>
-    <p class="note">Needs a mouse and keyboard. Your M16 wears the Azure Polarized skin: deep blue metal with shifting cyan bands.</p>
+    <p class="note">Your M16 wears the Azure Polarized skin: deep blue metal with shifting cyan bands.</p>
   </div>
 </div>
 
@@ -145,14 +183,14 @@
   pitchObj.add(camera);
   scene.add(yawObj);
 
-  const hemi = new T.HemisphereLight(0x7ea6ff, 0x1a1030, 0.55);
+  const hemi = new T.HemisphereLight(0x7ea6ff, 0x1a1030, 0.6);
   scene.add(hemi);
-  const sun = new T.DirectionalLight(0xfff2dd, 1.0);
-  sun.position.set(60, 110, 40);
+  const sun = new T.DirectionalLight(0xffe9d0, 0.9);
+  sun.position.set(70, 120, -50);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   const sc = sun.shadow.camera;
-  sc.left = -110; sc.right = 110; sc.top = 110; sc.bottom = -110; sc.far = 300;
+  sc.left = -140; sc.right = 140; sc.top = 140; sc.bottom = -140; sc.far = 350;
   scene.add(sun);
 
   function resize() {
@@ -180,11 +218,36 @@
     pillar: mat(0x4a5498),
   };
 
-  // ---------- map: Hyper Shot-style symmetric arena ----------
-  // Units are studs. Blue base at -Z, red base at +Z, raised center platform.
+  // ---------- map: City Arena (fan reconstruction) ----------
+  // Units are studs. A city block cut into an arena: a main street running the
+  // long axis, a cross street, a raised central plaza with a fountain, storefront
+  // buildings with rooftop access by exterior stairs, back alleys, parked cars
+  // and bus shelters for cover. Spawns sit at the two street ends.
+  Object.assign(M, {
+    asphalt: mat(0x181b28, { roughness: 0.95 }),
+    paint: mat(0xd8dce8, { roughness: 0.9 }),
+    sidewalk: mat(0x2c3048),
+    plaza: mat(0x33385a),
+    plazaEdge: mat(0x4a5080),
+    water: mat(0x35a4ff, { emissive: 0x1e6fff, emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.3 }),
+    roof: mat(0x23263a),
+    ac: mat(0x6b7089, { metalness: 0.4, roughness: 0.6 }),
+    dumpster: mat(0x2f6b4a),
+    bus: mat(0xf2c14e, { roughness: 0.5 }),
+    busGlass: mat(0x1a1f2e, { roughness: 0.3, metalness: 0.4 }),
+    glass: new T.MeshStandardMaterial({ color: 0x9ad8ff, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.2 }),
+    pole: mat(0x777c92, { metalness: 0.6, roughness: 0.4 }),
+    lamp: mat(0xffe2a8, { emissive: 0xffe2a8, emissiveIntensity: 1.6 }),
+    winLit: mat(0xffd58a, { emissive: 0xffd58a, emissiveIntensity: 0.9 }),
+    winDark: mat(0x0f1220, { roughness: 0.3, metalness: 0.5 }),
+    skyline: mat(0x10131f),
+    barrier: mat(0x9a9db0),
+  });
+  const facades = [mat(0x3b4270), mat(0x4a3d63), mat(0x2f4d5a), mat(0x5c4a3e)];
+  const carColors = [mat(0xd94b5c, { metalness: 0.5, roughness: 0.4 }), mat(0x3a7bd5, { metalness: 0.5, roughness: 0.4 }), mat(0xe8e8ec, { metalness: 0.4, roughness: 0.4 }), mat(0x2a2e3a, { metalness: 0.5, roughness: 0.4 })];
+
   const colliders = []; // {min:Vector3, max:Vector3}
   const worldMeshes = [];
-  const bakeGeo = [];
 
   function box(x, y, z, w, h, d, material, opts) {
     const g = new T.BoxGeometry(w, h, d);
@@ -196,6 +259,19 @@
     if (!opts || !opts.noCollide) {
       colliders.push({ min: new T.Vector3(x - w / 2, y, z - d / 2), max: new T.Vector3(x + w / 2, y + h, z + d / 2) });
     }
+    return m;
+  }
+  function deco(x, y, z, w, h, d, material) {
+    const m = box(x, y, z, w, h, d, material, { noCollide: true });
+    m.castShadow = false;
+    return m;
+  }
+  function cyl(x, y, z, r, h, material, opts) {
+    const m = new T.Mesh(new T.CylinderGeometry(r, r, h, 24), material);
+    m.position.set(x, y + h / 2, z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); worldMeshes.push(m);
+    if (!opts || !opts.noCollide) colliders.push({ min: new T.Vector3(x - r, y, z - r), max: new T.Vector3(x + r, y + h, z + r) });
     return m;
   }
   // stairs approximate a ramp with collidable steps
@@ -216,115 +292,130 @@
     m.castShadow = false;
     return m;
   }
-
-  const MAP_W = 120, MAP_D = 160;
-  // ground with checker tiles
-  {
-    const tile = 10;
-    for (let ix = -MAP_W / 2; ix < MAP_W / 2; ix += tile) {
-      for (let iz = -MAP_D / 2; iz < MAP_D / 2; iz += tile) {
-        const alt = ((ix / tile + iz / tile) % 2 === 0);
-        const g = new T.PlaneGeometry(tile, tile);
-        const m = new T.Mesh(g, alt ? M.floor : M.floorAlt);
-        m.rotation.x = -Math.PI / 2;
-        m.position.set(ix + tile / 2, 0, iz + tile / 2);
-        m.receiveShadow = true;
-        scene.add(m);
-        worldMeshes.push(m);
+  // rows of windows on one face of a building. axis 'x' = face perpendicular to x.
+  function windows(axis, facePos, from, to, baseY, topY, other) {
+    for (let y = baseY; y < topY - 2; y += 4) {
+      for (let p = from + 2; p < to - 1; p += 4) {
+        const lit = Math.random() < 0.55 ? M.winLit : M.winDark;
+        if (axis === 'x') deco(facePos, y, p, 0.2, 2.2, 2.4, lit);
+        else deco(p, y, facePos, 2.4, 2.2, 0.2, lit);
       }
     }
+  }
+
+  const MAP_W = 150, MAP_D = 190;
+  // ground: asphalt
+  {
+    const g = new T.Mesh(new T.PlaneGeometry(MAP_W, MAP_D), M.asphalt);
+    g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
+    scene.add(g); worldMeshes.push(g);
     colliders.push({ min: new T.Vector3(-MAP_W, -10, -MAP_D), max: new T.Vector3(MAP_W, 0, MAP_D) });
   }
+  // road markings
+  for (let z = -90; z <= 90; z += 8) if (Math.abs(z) > 24) deco(0, 0.02, z, 0.6, 0.02, 4, M.paint);
+  for (let x = -70; x <= 70; x += 8) if (Math.abs(x) > 24) deco(x, 0.02, 0, 4, 0.02, 0.6, M.paint);
+  for (const zc of [-22, 22]) for (let x = -12; x <= 12; x += 3) deco(x, 0.02, zc, 2, 0.02, 3, M.paint); // crosswalks
+  for (const xc of [-22, 22]) for (let z = -10; z <= 10; z += 3) deco(xc, 0.02, z, 3, 0.02, 2, M.paint);
+  // sidewalks: raised curbs along both streets
+  box(-17, 0, 0, 6, 0.4, MAP_D, M.sidewalk);
+  box(17, 0, 0, 6, 0.4, MAP_D, M.sidewalk);
+  box(0, 0, -15, MAP_W, 0.4, 6, M.sidewalk);
+  box(0, 0, 15, MAP_W, 0.4, 6, M.sidewalk);
   // outer walls
-  const WALL_H = 18;
-  box(0, 0, -MAP_D / 2 - 1, MAP_W + 4, WALL_H, 2, M.wall);
-  box(0, 0, MAP_D / 2 + 1, MAP_W + 4, WALL_H, 2, M.wall);
-  box(-MAP_W / 2 - 1, 0, 0, 2, WALL_H, MAP_D + 4, M.wall);
-  box(MAP_W / 2 + 1, 0, 0, 2, WALL_H, MAP_D + 4, M.wall);
-  // neon wall trim
-  trim(0, 6, -MAP_D / 2 + 0.05, MAP_W, 0.3, M.cyan);
-  trim(0, 6, MAP_D / 2 - 0.05, MAP_W, 0.3, M.magenta);
+  const WALL_H = 40;
+  box(0, 0, -MAP_D / 2 - 1, MAP_W + 4, WALL_H, 2, M.skyline);
+  box(0, 0, MAP_D / 2 + 1, MAP_W + 4, WALL_H, 2, M.skyline);
+  box(-MAP_W / 2 - 1, 0, 0, 2, WALL_H, MAP_D + 4, M.skyline);
+  box(MAP_W / 2 + 1, 0, 0, 2, WALL_H, MAP_D + 4, M.skyline);
 
-  // base buildings (spawn rooms) at each end
-  function base(zs, accent) {
-    const z = zs * 62;
-    box(0, 0, z, 40, 1, 24, M.platform);                        // raised base floor
-    box(-19, 0, z, 2, 12, 24, M.wall);                          // side walls
-    box(19, 0, z, 2, 12, 24, M.wall);
-    box(0, 11, z, 40, 1, 24, M.wall);                           // roof
-    box(-13, 0, z - zs * 12, 12, 12, 2, M.wall);                // front wall with door gap
-    box(13, 0, z - zs * 12, 12, 12, 2, M.wall);
-    trim(0, 1.1, z - zs * 11.6, 14, 0.3, accent);               // doorway glow strip
-    ramp(0, z - zs * 17, 14, 8, 1, zs > 0 ? '-z' : 'z', M.ramp);
-    trim(-19, 12.1, z, 0.4, 24, accent);
-    trim(19, 12.1, z, 0.4, 24, accent);
+  // central plaza with fountain
+  box(0, 0, 0, 40, 1, 40, M.plaza);
+  trim(0, 1.05, -19.8, 40, 0.4, M.lime); trim(0, 1.05, 19.8, 40, 0.4, M.lime);
+  trim(-19.8, 1.05, 0, 0.4, 40, M.lime); trim(19.8, 1.05, 0, 0.4, 40, M.lime);
+  cyl(0, 1, 0, 7, 1.8, M.plazaEdge);
+  cyl(0, 2.6, 0, 6.4, 0.3, M.water, { noCollide: true });
+  cyl(0, 1, 0, 1.4, 6.5, M.plazaEdge);
+  cyl(0, 7.3, 0, 2.4, 0.4, M.water, { noCollide: true });
+  for (const [px, pz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
+    box(px, 1, pz, 5, 2.4, 5, M.plazaEdge);
+    box(px, 3.4, pz, 3.6, 1.2, 3.6, M.dumpster, { noCollide: true });
   }
-  base(-1, M.cyan);
-  base(1, M.magenta);
+  for (const [bx, bz, w, d] of [[-9, -17, 5, 1.4], [9, -17, 5, 1.4], [-9, 17, 5, 1.4], [9, 17, 5, 1.4]]) box(bx, 1, bz, w, 1.3, d, M.pole);
 
-  // center platform with ramps on 4 sides
-  box(0, 0, 0, 34, 6, 34, M.platform);
-  trim(0, 6.05, -16.8, 34, 0.4, M.lime);
-  trim(0, 6.05, 16.8, 34, 0.4, M.lime);
-  trim(-16.8, 6.05, 0, 0.4, 34, M.lime);
-  trim(16.8, 6.05, 0, 0.4, 34, M.lime);
-  ramp(0, -25, 12, 16, 6, '-z', M.ramp);
-  ramp(0, 25, 12, 16, 6, 'z', M.ramp);
-  ramp(-25, 0, 12, 16, 6, '-x', M.ramp);
-  ramp(25, 0, 12, 16, 6, 'x', M.ramp);
-  // center pillar cluster (cover on top of platform)
-  box(0, 6, 0, 6, 8, 6, M.pillar);
-  box(-11, 6, -11, 4, 4, 4, M.crate);
-  box(11, 6, 11, 4, 4, 4, M.crate);
-  box(11, 6, -11, 4, 4, 4, M.crate);
-  box(-11, 6, 11, 4, 4, 4, M.crate);
+  // four building quadrants
+  const quad = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+  quad.forEach(([sx, sz], qi) => {
+    const accent = sz < 0 ? M.cyan : M.magenta;
+    const fA = facades[qi % facades.length], fB = facades[(qi + 1) % facades.length], fC = facades[(qi + 2) % facades.length];
+    // Building A: corner storefront with rooftop access
+    box(sx * 34, 0, sz * 35, 24, 14, 26, fA);
+    trim(sx * 34, 14.05, sz * 22.3, 24, 0.5, accent);
+    trim(sx * 22.3, 14.05, sz * 35, 0.5, 26, accent);
+    box(sx * 30, 14, sz * 30, 3, 2, 3, M.ac);
+    box(sx * 40, 14, sz * 42, 4, 2.4, 3, M.ac);
+    box(sx * 42, 14, sz * 26, 2.5, 3.5, 2.5, M.ac);
+    windows('x', sx * 21.9, sz > 0 ? 22 : -48, sz > 0 ? 48 : -22, 4, 14);
+    windows('z', sz * 21.9, sx > 0 ? 22 : -46, sx > 0 ? 46 : -22, 4, 14);
+    deco(sx * 21.85, 0.4, sz * 35, 0.3, 3.4, 20, M.glass);          // storefront glass
+    deco(sx * 20.8, 4.6, sz * 35, 2.6, 0.3, 22, accent);            // awning glow
+    // exterior stair up the cross-street face of Building A
+    ramp(sx * 34, sz * 20, 4, 24, 14, sx > 0 ? 'x' : '-x', M.roof);
+    // alley between A and B with a dumpster
+    box(sx * 34, 0, sz * 51, 3, 3, 4, M.dumpster);
+    // Building B: taller, neon billboard, no roof access
+    box(sx * 34, 0, sz * 67, 24, 20, 26, fB);
+    windows('x', sx * 21.9, sz > 0 ? 54 : -80, sz > 0 ? 80 : -54, 4, 20);
+    deco(sx * 21.8, 8, sz * 67, 0.3, 6, 12, accent);                // neon sign
+    deco(sx * 34, 20, sz * 67, 14, 6, 0.6, accent);                 // rooftop billboard
+    deco(sx * 34, 20, sz * 60, 0.6, 5, 0.6, M.pole); deco(sx * 34, 20, sz * 74, 0.6, 5, 0.6, M.pole);
+    // Building C: tall backdrop block behind a narrow back alley
+    box(sx * 62.5, 0, sz * 51, 25, 28, 58, fC);
+    windows('x', sx * 49.9, sz > 0 ? 22 : -80, sz > 0 ? 80 : -22, 4, 28);
+    box(sx * 48, 0, sz * 60, 2, 2, 2, M.barrier);                   // hop-over crate in the alley
+    box(sx * 48, 0, sz * 32, 2, 2, 2, M.barrier);
+    // end-zone building closing the corner
+    box(sx * 62, 0, sz * 88, 26, 18, 14, fA);
+    windows('z', sz * 80.9, sx > 0 ? 49 : -75, sx > 0 ? 75 : -49, 4, 18);
+    // parked cars on the main street
+    for (const cz of [35, 68]) {
+      const cm = carColors[(qi + cz) % carColors.length];
+      box(sx * 8, 0, sz * cz, 5, 1.6, 10, cm);
+      box(sx * 8, 1.6, sz * cz, 4.6, 1.5, 5.5, M.busGlass);
+    }
+    // car on the cross street
+    box(sx * 38, 0, sz * 6, 10, 1.6, 5, carColors[qi % carColors.length]);
+    box(sx * 38, 1.6, sz * 6, 5.5, 1.5, 4.6, M.busGlass);
+    // street lights along the sidewalk
+    for (const lz of [24, 50, 78]) {
+      box(sx * 16, 0, sz * lz, 0.5, 12, 0.5, M.pole);
+      deco(sx * 15, 12, sz * lz, 3, 0.5, 1.2, M.lamp);
+    }
+    // bus shelter on the sidewalk
+    box(sx * 17, 0, sz * 62, 5, 0.4, 10, M.sidewalk);
+    box(sx * 17, 5, sz * 62, 5.5, 0.4, 10.5, M.roof);
+    box(sx * 17, 0, sz * 57.2, 0.4, 5, 0.4, M.pole); box(sx * 17, 0, sz * 66.8, 0.4, 5, 0.4, M.pole);
+    box(sx * 19.2, 0, sz * 62, 0.2, 5, 9.6, M.glass);
+    // bus parked across the end zone
+    box(sx * 30, 0, sz * 88, 22, 7, 8, M.bus);
+    deco(sx * 30, 3.2, sz * 84, 21, 2.4, 0.2, M.busGlass); deco(sx * 30, 3.2, sz * 92, 21, 2.4, 0.2, M.busGlass);
+    trim(sx * 30, 7.05, sz * 88, 22, 8, accent);
+    // concrete barriers at the end of the street
+    box(sx * 10, 0, sz * 80, 6, 2.2, 1.6, M.barrier);
+  });
+  // spawn glow strips
+  trim(0, 0.05, -90, 20, 1, M.cyan);
+  trim(0, 0.05, 90, 20, 1, M.magenta);
 
-  // side lanes: elevated walkways along the long edges
-  function lane(xs) {
-    const x = xs * 46;
-    box(x, 0, 0, 14, 8, 60, M.platform);
-    trim(x, 8.05, 0, 14, 0.4, M.cyan);
-    ramp(x, -38, 10, 16, 8, '-z', M.ramp);
-    ramp(x, 38, 10, 16, 8, 'z', M.ramp);
-    box(x, 8, -18, 4, 3, 4, M.crate);
-    box(x, 8, 18, 4, 3, 4, M.crate);
-    box(x + xs * 2, 8, 0, 3, 5, 10, M.pillar);
+  // skyline beyond the walls
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2;
+    const rx = 95 + Math.random() * 40, rz = 115 + Math.random() * 50;
+    const h = 40 + Math.random() * 70;
+    const m = deco(Math.cos(a) * rx, 0, Math.sin(a) * rz, 12 + Math.random() * 10, h, 12 + Math.random() * 10, M.skyline);
+    m.receiveShadow = false;
+    if (i % 3 === 0) deco(m.position.x, h, m.position.z, 1, 8, 1, i % 2 ? M.cyan : M.magenta);
   }
-  lane(-1);
-  lane(1);
-
-  // mid-lane cover: crates and low walls between bases and center
-  const crates = [
-    [-20, -30], [20, -30], [-20, 30], [20, 30],
-    [-32, -12], [32, -12], [-32, 12], [32, 12],
-    [-8, -44], [8, -44], [-8, 44], [8, 44],
-    [-24, -50], [24, -50], [-24, 50], [24, 50],
-  ];
-  for (const [cx, cz] of crates) {
-    box(cx, 0, cz, 4, 4, 4, M.crate);
-  }
-  for (const [cx, cz] of [[-20, -30], [20, 30]]) box(cx, 4, cz, 4, 4, 4, M.crateTop);
-  // low neon barriers
-  box(-14, 0, -58, 10, 3, 1.5, M.wall); trim(-14, 3.05, -58, 10, 1.5, M.cyan);
-  box(14, 0, -58, 10, 3, 1.5, M.wall); trim(14, 3.05, -58, 10, 1.5, M.cyan);
-  box(-14, 0, 58, 10, 3, 1.5, M.wall); trim(-14, 3.05, 58, 10, 1.5, M.magenta);
-  box(14, 0, 58, 10, 3, 1.5, M.wall); trim(14, 3.05, 58, 10, 1.5, M.magenta);
-  // corner towers
-  for (const [tx, tz] of [[-52, -72], [52, -72], [-52, 72], [52, 72]]) {
-    box(tx, 0, tz, 12, 14, 12, M.pillar);
-    trim(tx, 14.05, tz, 12, 12, tz < 0 ? M.cyan : M.magenta);
-  }
-  // floating pads (jump routes)
-  for (const [px, pz] of [[-30, -25], [30, 25], [30, -25], [-30, 25]]) {
-    box(px, 3.5, pz, 6, 1, 6, M.platform);
-    trim(px, 4.55, pz, 6, 6, M.lime);
-  }
-  // sky pylons (decor)
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const m = box(Math.cos(a) * 95, 30 + Math.sin(i * 3) * 10, Math.sin(a) * 120, 3, 40, 3, i % 2 ? M.cyan : M.magenta, { noCollide: true });
-    m.castShadow = false;
-  }
+  scene.fog = new T.Fog(0x0b1024, 150, 320);
 
   // ---------- Roblox-style blocky avatar ----------
   const skinTones = [0xf5c6a0, 0xe0ac7e, 0xc68642, 0x8d5524, 0xffd1b3];
@@ -393,7 +484,7 @@
 
   // ---------- player ----------
   const P = {
-    pos: new T.Vector3(0, 1, -62),
+    pos: new T.Vector3(0, 0.5, -88),
     vel: new T.Vector3(),
     r: 1.2, h: 5.4, eye: 4.8,
     onGround: false,
@@ -432,7 +523,11 @@
     if (keys.KeyS) wish.sub(fwd);
     if (keys.KeyD) wish.add(right);
     if (keys.KeyA) wish.sub(right);
-    const sprinting = keys.ShiftLeft || keys.ShiftRight;
+    let sprinting = !!(keys.ShiftLeft || keys.ShiftRight);
+    if (mobile && joy.mag > 0.12) {
+      wish.addScaledVector(fwd, -joy.y).addScaledVector(right, joy.x);
+      if (joy.mag > 0.85) sprinting = true;
+    }
     const spd = sprinting ? P.sprint : P.speed;
     if (wish.lengthSq() > 0) wish.normalize().multiplyScalar(spd);
     // timers
@@ -498,8 +593,73 @@
   let locked = false;
   document.addEventListener('pointerlockchange', () => {
     locked = document.pointerLockElement === canvas;
-    if (!locked && running) showOverlay('Paused. Click to resume.');
+    if (!locked && running && !mobile) showOverlay('Paused. Click to resume.');
   });
+
+  // ---------- touch controls ----------
+  const mobile = window.matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && window.innerWidth < 1100);
+  const joy = { x: 0, y: 0, mag: 0, id: null, cx: 0, cy: 0 };
+  if (mobile) {
+    document.body.classList.add('touch');
+    $('touch').hidden = false;
+    $('play').textContent = 'Tap to deploy';
+    const joyEl = $('joy'), base = $('joyBase'), knob = $('joyKnob');
+    const R = 48;
+    const findTouch = (e, id) => { for (const t of e.changedTouches) if (t.identifier === id) return t; return null; };
+    joyEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (joy.id !== null) return;
+      const t = e.changedTouches[0];
+      joy.id = t.identifier; joy.cx = t.clientX; joy.cy = t.clientY;
+      base.hidden = false; knob.hidden = false;
+      base.style.left = knob.style.left = joy.cx + 'px'; base.style.top = knob.style.top = joy.cy + 'px';
+    }, { passive: false });
+    joyEl.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const t = findTouch(e, joy.id); if (!t) return;
+      let dx = t.clientX - joy.cx, dy = t.clientY - joy.cy;
+      const len = Math.hypot(dx, dy);
+      if (len > R) { dx = dx / len * R; dy = dy / len * R; }
+      joy.x = dx / R; joy.y = dy / R; joy.mag = Math.min(1, len / R);
+      knob.style.left = (joy.cx + dx) + 'px'; knob.style.top = (joy.cy + dy) + 'px';
+    }, { passive: false });
+    const joyEnd = (e) => {
+      if (!findTouch(e, joy.id)) return;
+      joy.id = null; joy.x = joy.y = joy.mag = 0; base.hidden = true; knob.hidden = true;
+    };
+    joyEl.addEventListener('touchend', joyEnd); joyEl.addEventListener('touchcancel', joyEnd);
+
+    let lookId = null, lx = 0, ly = 0;
+    const lookEl = $('look');
+    lookEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (lookId !== null) return;
+      const t = e.changedTouches[0]; lookId = t.identifier; lx = t.clientX; ly = t.clientY;
+    }, { passive: false });
+    lookEl.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const t = findTouch(e, lookId); if (!t) return;
+      P.yaw -= (t.clientX - lx) * 0.0065; P.pitch -= (t.clientY - ly) * 0.0065;
+      P.pitch = Math.max(-1.5, Math.min(1.5, P.pitch));
+      yawObj.rotation.y = P.yaw; pitchObj.rotation.x = P.pitch;
+      lx = t.clientX; ly = t.clientY;
+    }, { passive: false });
+    const lookEnd = (e) => { if (findTouch(e, lookId)) lookId = null; };
+    lookEl.addEventListener('touchend', lookEnd); lookEl.addEventListener('touchcancel', lookEnd);
+
+    const hold = (id, down, up) => {
+      const el = $(id);
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); el.classList.add('on'); down(); }, { passive: false });
+      const end = (e) => { e.preventDefault(); el.classList.remove('on'); if (up) up(); };
+      el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
+    };
+    hold('tFire', () => { triggerDown = true; }, () => { triggerDown = false; });
+    hold('tJump', () => { keys.Space = true; }, () => { keys.Space = false; });
+    hold('tDash', () => { P.wantDash = true; });
+    hold('tSlide', () => { P.wantSlide = true; });
+    hold('tReload', () => { reload(); });
+    $('tPause').addEventListener('touchstart', (e) => { e.preventDefault(); running = false; triggerDown = false; showOverlay('Tap to resume'); }, { passive: false });
+  }
   document.addEventListener('mousemove', (e) => {
     if (!locked) return;
     P.yaw -= e.movementX * 0.0022;
@@ -642,31 +802,46 @@
 
   // ---------- bots ----------
   const BOT_NAMES = ['xXNoScopeXx', 'BaconHair_7', 'cool_guy2012', 'PixelKnight', 'Zyra_Blitz'];
-  const waypoints = [
-    // ground ring
-    [0, 0, -50], [-24, 0, -40], [24, 0, -40], [-36, 0, -24], [36, 0, -24],
-    [-36, 0, 24], [36, 0, 24], [-24, 0, 40], [24, 0, 40], [0, 0, 50],
-    [-8, 0, -34], [8, 0, -34], [-8, 0, 34], [8, 0, 34],
-    // center platform top
-    [0, 6, -12], [0, 6, 12], [-12, 6, 0], [12, 6, 0], [-6, 6, -6], [6, 6, 6],
-    // ramp feet/heads
-    [0, 0, -34], [0, 0, 34], [-34, 0, 0], [34, 0, 0],
-    // side lanes (top)
-    [-46, 8, -20], [-46, 8, 0], [-46, 8, 20], [46, 8, -20], [46, 8, 0], [46, 8, 20],
-    [-46, 0, -48], [-46, 0, 48], [46, 0, -48], [46, 0, 48],
-  ].map((p) => new T.Vector3(p[0], p[1], p[2]));
-  // edges: connect nodes by hand (index pairs), so bots walk real routes
-  const edges = [
-    [0, 1], [0, 2], [0, 10], [0, 11], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [6, 8], [7, 9], [8, 9], [9, 12], [9, 13],
-    [10, 20], [11, 20], [12, 21], [13, 21], [1, 10], [2, 11], [7, 12], [8, 13],
-    [20, 14], [21, 15], [3, 22], [5, 22], [22, 16], [4, 23], [6, 23], [23, 17],
-    [14, 18], [14, 16], [14, 17], [15, 19], [15, 16], [15, 17], [18, 16], [19, 17], [18, 19],
-    [30, 24], [24, 25], [25, 26], [26, 31], [32, 27], [27, 28], [28, 29], [29, 33],
-    [1, 30], [7, 31], [2, 32], [8, 33], [3, 30], [5, 31], [4, 32], [6, 33],
-  ];
+  // waypoint graph generated from the map: grid points on walkable ground,
+  // connected where a bot-sized body can walk the segment without a step
+  function groundHeightAt(x, z) {
+    let h = -Infinity;
+    for (const c of colliders) {
+      if (x >= c.min.x && x <= c.max.x && z >= c.min.z && z <= c.max.z && c.max.y <= 8 && c.max.y > h) h = c.max.y;
+    }
+    return h;
+  }
+  function bodyFree(x, z, h) {
+    _min.set(x - 1.1, h + 0.3, z - 1.1); _max.set(x + 1.1, h + 5, z + 1.1);
+    return !overlapsAny(_min, _max);
+  }
+  const waypoints = [];
+  const NAV_STEP = 8;
+  for (let x = -72; x <= 72; x += NAV_STEP) {
+    for (let z = -92; z <= 92; z += NAV_STEP) {
+      const h = groundHeightAt(x, z);
+      if (h > 2 || !bodyFree(x, z, h)) continue;
+      waypoints.push(new T.Vector3(x, h, z));
+    }
+  }
+  function walkable(a, b) {
+    const n = Math.ceil(a.distanceTo(b) / 1.5);
+    let prev = a.y;
+    for (let i = 1; i <= n; i++) {
+      const t = i / n, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t;
+      const h = groundHeightAt(x, z);
+      if (Math.abs(h - prev) > 1.2 || !bodyFree(x, z, h)) return false;
+      prev = h;
+    }
+    return true;
+  }
   const adj = waypoints.map(() => []);
-  for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); }
-  const botSpawns = [[-10, 1, 62], [10, 1, 62], [0, 1, 66], [-46, 0, 48], [46, 0, 48]];
+  for (let i = 0; i < waypoints.length; i++) {
+    for (let j = i + 1; j < waypoints.length; j++) {
+      if (waypoints[i].distanceTo(waypoints[j]) <= NAV_STEP * 1.5 && walkable(waypoints[i], waypoints[j])) { adj[i].push(j); adj[j].push(i); }
+    }
+  }
+  const botSpawns = [[-8, 0, 88], [8, 0, 88], [0, 0, 92], [-14, 0, 76], [14, 0, 76]];
   const bots = [];
   function spawnBot(i) {
     const b = { name: BOT_NAMES[i], mesh: makeAvatar(BOT_NAMES[i], i), hp: 100, dead: false, respawnAt: 0, node: 0, target: null, nextShot: 0, pos: new T.Vector3(), speed: 14 + Math.random() * 6, yaw: 0, strafe: 0, strafeT: 0 };
@@ -677,6 +852,7 @@
   function resetBot(b, i) {
     const s = botSpawns[(i !== undefined ? i : Math.floor(Math.random() * botSpawns.length)) % botSpawns.length];
     b.pos.set(s[0] + (Math.random() - 0.5) * 4, s[1], s[2]);
+    const gh = groundHeightAt(b.pos.x, b.pos.z); if (isFinite(gh)) b.pos.y = gh;
     b.hp = 100; b.dead = false; b.mesh.visible = true;
     // nearest waypoint
     let best = 0, bd = Infinity;
@@ -711,6 +887,8 @@
         const side = new T.Vector3(toPlayer.z, 0, -toPlayer.x).normalize().multiplyScalar(b.strafe * b.speed * 0.5 * dt);
         if (dist > 40) side.addScaledVector(toPlayer.normalize(), b.speed * 0.6 * dt);
         tryMoveBot(b, side);
+        const gh = groundHeightAt(b.pos.x, b.pos.z);
+        if (isFinite(gh) && Math.abs(gh - b.pos.y) < 2.5) b.pos.y += (gh - b.pos.y) * Math.min(1, dt * 8);
         if (now >= b.nextShot) {
           b.nextShot = now + 0.14 + Math.random() * 0.08;
           if (Math.random() < 0.3) b.nextShot += 0.5; // burst pauses
@@ -725,7 +903,7 @@
         const d = step.length();
         if (d < 1.5) {
           const nbrs = adj[b.node];
-          const next = nbrs[Math.floor(Math.random() * nbrs.length)];
+          const next = nbrs.length ? nbrs[Math.floor(Math.random() * nbrs.length)] : Math.floor(Math.random() * waypoints.length);
           b.node = next; b.target = waypoints[next].clone();
         } else {
           step.normalize().multiplyScalar(Math.min(d, b.speed * dt));
@@ -791,7 +969,7 @@
   let botScore = 0;
   function respawnPlayer() {
     P.dead = false; P.hp = P.maxHp; P.vel.set(0, 0, 0);
-    P.pos.set((Math.random() - 0.5) * 16, 1.1, -62);
+    P.pos.set((Math.random() - 0.5) * 16, 0.5, -88);
     P.slide = 0; P.dashT = 0; P.dashCd = 0; P.jumps = 0;
     P.yaw = 0; P.pitch = 0; yawObj.rotation.y = 0; pitchObj.rotation.x = 0;
     W.mag = W.magSize; W.reloading = false; W.burst = 0; hideMsg();
@@ -818,7 +996,11 @@
     if (roundOver) { restartRound(); }
     $('overlay').classList.add('hidden');
     running = true;
-    canvas.requestPointerLock();
+    if (mobile) {
+      try { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* not supported */ }
+    } else {
+      canvas.requestPointerLock();
+    }
   });
   function endRound(won) {
     roundOver = true; running = false;
@@ -838,7 +1020,7 @@
   function frame(t) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (t - last) / 1000); last = t; now += dt;
-    if (running && locked) {
+    if (running && (locked || mobile)) {
       movePlayer(dt);
       updateWeapon(dt);
       updateBots(dt);
