@@ -40,7 +40,8 @@
   #ammo { text-align: right; }
   #ammo .n { font-family: var(--display); font-weight: 900; font-size: 34px; font-variant-numeric: tabular-nums; line-height: 1; }
   #ammo .n small { font-size: 16px; color: var(--muted); font-weight: 500; }
-  #ammo .gun { font-size: 13px; color: var(--cyan); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; }
+  #ammo .gun { font-size: 13px; color: var(--cyan); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  #ammo .gun.cool { color: var(--muted); }
   .top { position: absolute; left: 0; right: 0; top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; justify-content: center; }
   #score { display: flex; gap: 22px; align-items: center; font-family: var(--display); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
   #score .you { color: var(--cyan); }
@@ -93,26 +94,29 @@
     <div id="ammo" class="panel">
       <div class="label">Ammo</div>
       <div class="n"><span id="mag">30</span><small> / <span id="reserve">120</span></small></div>
-      <div class="gun">M16 · Polaroid</div>
+      <div class="gun">M16 · Azure Polarized</div>
+      <div class="gun" id="dash">Dash ready</div>
     </div>
   </div>
 </div>
 
 <div id="overlay">
   <div class="card">
-    <h1>HYPER SHOT <span>ARENA</span></h1>
+    <h1>HYPERSHOT <span>ARENA</span></h1>
     <p class="sub">Fan-made replica map · 5 bots · first to 20 kills</p>
     <p class="stats hidden" id="roundStats"></p>
     <dl class="keys">
       <dt><kbd>W A S D</kbd></dt><dd>Move</dd>
       <dt><kbd>Mouse</kbd></dt><dd>Look · left click fires a 3-round burst</dd>
-      <dt><kbd>Space</kbd></dt><dd>Jump</dd>
+      <dt><kbd>Space</kbd></dt><dd>Jump · press again in the air to double jump</dd>
       <dt><kbd>Shift</kbd></dt><dd>Sprint</dd>
+      <dt><kbd>C</kbd></dt><dd>Slide while sprinting</dd>
+      <dt><kbd>Q</kbd></dt><dd>Dash (5 s cooldown)</dd>
       <dt><kbd>R</kbd></dt><dd>Reload</dd>
       <dt><kbd>Esc</kbd></dt><dd>Release the mouse</dd>
     </dl>
     <button id="play" type="button">Click to deploy</button>
-    <p class="note">Needs a mouse and keyboard. The M16 carries the Polaroid skin: white body, rainbow stripe.</p>
+    <p class="note">Needs a mouse and keyboard. Your M16 wears the Azure Polarized skin: deep blue metal with shifting cyan bands.</p>
   </div>
 </div>
 
@@ -397,10 +401,17 @@
     yaw: 0, pitch: 0,
     speed: 26, sprint: 36, jump: 24,
     kills: 0, deaths: 0, lastHit: 0,
+    jumps: 0, jumpHeld: false, slide: 0, slideCd: 0, dashCd: 0, dashT: 0, dashDir: new T.Vector3(), eyeCur: 4.8, wantDash: false, wantSlide: false,
   };
   const GRAVITY = 60;
   const keys = {};
-  window.addEventListener('keydown', (e) => { keys[e.code] = true; if (e.code === 'KeyR') reload(); if (e.code === 'Space') e.preventDefault(); });
+  window.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    if (e.code === 'KeyR') reload();
+    if (e.code === 'KeyQ') P.wantDash = true;
+    if (e.code === 'KeyC') P.wantSlide = true;
+    if (e.code === 'Space') e.preventDefault();
+  });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
   function overlapsAny(min, max) {
@@ -421,14 +432,44 @@
     if (keys.KeyS) wish.sub(fwd);
     if (keys.KeyD) wish.add(right);
     if (keys.KeyA) wish.sub(right);
-    const spd = keys.ShiftLeft || keys.ShiftRight ? P.sprint : P.speed;
+    const sprinting = keys.ShiftLeft || keys.ShiftRight;
+    const spd = sprinting ? P.sprint : P.speed;
     if (wish.lengthSq() > 0) wish.normalize().multiplyScalar(spd);
-    // smooth horizontal accel
-    const accel = P.onGround ? 14 : 4;
-    P.vel.x += (wish.x - P.vel.x) * Math.min(1, accel * dt);
-    P.vel.z += (wish.z - P.vel.z) * Math.min(1, accel * dt);
-    if (keys.Space && P.onGround) { P.vel.y = P.jump; P.onGround = false; }
-    P.vel.y -= GRAVITY * dt;
+    // timers
+    P.dashCd = Math.max(0, P.dashCd - dt);
+    P.slideCd = Math.max(0, P.slideCd - dt);
+    const horiz = Math.hypot(P.vel.x, P.vel.z);
+    // dash: short burst in the wish direction (or facing), 5 s cooldown
+    if (P.wantDash && P.dashCd <= 0) {
+      P.dashDir.copy(wish.lengthSq() > 0 ? wish : fwd).setY(0).normalize();
+      P.dashT = 0.16; P.dashCd = 5; P.vel.y = Math.max(P.vel.y, 4);
+      flashMsg('Dash');
+    }
+    P.wantDash = false;
+    // slide: sprint + C on the ground, keeps momentum and drops the camera
+    if (P.wantSlide && P.onGround && P.slide <= 0 && P.slideCd <= 0 && horiz > 18) {
+      P.slide = 0.75; P.slideCd = 1.1;
+      const boost = Math.max(horiz * 1.35, P.sprint * 1.2);
+      P.vel.x = P.vel.x / horiz * boost; P.vel.z = P.vel.z / horiz * boost;
+    }
+    P.wantSlide = false;
+    if (P.slide > 0) P.slide -= dt;
+    // horizontal accel: instant during dash, low during slide, normal otherwise
+    if (P.dashT > 0) {
+      P.dashT -= dt;
+      P.vel.x = P.dashDir.x * 95; P.vel.z = P.dashDir.z * 95;
+    } else {
+      const accel = P.slide > 0 ? 1.2 : (P.onGround ? 14 : 4);
+      P.vel.x += (wish.x - P.vel.x) * Math.min(1, accel * dt);
+      P.vel.z += (wish.z - P.vel.z) * Math.min(1, accel * dt);
+    }
+    // jump + one mid-air double jump
+    if (keys.Space && !P.jumpHeld) {
+      if (P.onGround) { P.vel.y = P.jump; P.onGround = false; P.slide = 0; }
+      else if (P.jumps > 0) { P.vel.y = P.jump * 0.92; P.jumps--; }
+    }
+    P.jumpHeld = !!keys.Space;
+    if (P.dashT <= 0) P.vel.y -= GRAVITY * dt;
 
     // X
     P.pos.x += P.vel.x * dt; bodyBox(P.pos);
@@ -443,12 +484,13 @@
     c = overlapsAny(_min, _max);
     P.onGround = false;
     if (c) {
-      if (P.vel.y <= 0) { P.pos.y = c.max.y + 0.001; P.onGround = true; }
+      if (P.vel.y <= 0) { P.pos.y = c.max.y + 0.001; P.onGround = true; P.jumps = 1; }
       else { P.pos.y = c.min.y - P.h - 0.001; }
       P.vel.y = 0;
     }
     if (P.pos.y < -30) killPlayer('the void');
-    yawObj.position.set(P.pos.x, P.pos.y + P.eye, P.pos.z);
+    P.eyeCur += ((P.slide > 0 ? 3.0 : P.eye) - P.eyeCur) * Math.min(1, dt * 12);
+    yawObj.position.set(P.pos.x, P.pos.y + P.eyeCur, P.pos.z);
   }
 
   // ---------- mouse look / pointer lock ----------
@@ -473,7 +515,8 @@
   const gunRoot = new T.Group();
   camera.add(gunRoot);
   {
-    const white = mat(0xf7f5ef, { roughness: 0.45, metalness: 0.1 });
+    // Azure Polarized finish: deep blue metallic body, cyan bands that shift hue
+    const white = mat(0x1443c9, { roughness: 0.22, metalness: 0.85, emissive: 0x0a2f8f, emissiveIntensity: 0.35 });
     const dark = mat(0x23262e, { roughness: 0.5, metalness: 0.5 });
     const part = (w, h, d, m, x, y, z) => { const mesh = new T.Mesh(new T.BoxGeometry(w, h, d), m); mesh.position.set(x, y, z); gunRoot.add(mesh); return mesh; };
     // receiver
@@ -495,19 +538,15 @@
     part(0.26, 0.7, 0.36, dark, 0, -0.55, 0.55).rotation.x = -0.3;
     part(0.3, 0.42, 2.0, white, 0, -0.08, 1.9);
     part(0.32, 0.6, 0.3, dark, 0, -0.1, 2.9);
-    // Polaroid rainbow stripe wrapping the handguard
-    const stripe = [0xff3b30, 0xff9500, 0xffcc00, 0x34c759, 0x007aff];
-    stripe.forEach((c, i) => {
-      const m = mat(c, { emissive: c, emissiveIntensity: 0.25, roughness: 0.4 });
-      part(0.38, 0.44, 0.16, m, 0, -0.02, -1.35 - i * 0.18);
-    });
-    // second, thinner stripe on the stock
-    stripe.forEach((c, i) => {
-      const m = mat(c, { roughness: 0.4 });
-      part(0.32, 0.44, 0.08, m, 0, -0.08, 1.25 + i * 0.1);
-    });
-    // Polaroid-style black label tab
-    part(0.36, 0.14, 0.5, dark, 0, -0.2, 0.2);
+    // polarized bands on the handguard and stock (hue animated in updateWeapon)
+    const bands = [];
+    const bandMat = () => mat(0x35e6ff, { emissive: 0x35e6ff, emissiveIntensity: 0.6, roughness: 0.2, metalness: 0.9 });
+    for (let i = 0; i < 6; i++) bands.push(part(0.39, 0.45, 0.12, bandMat(), 0, -0.02, -1.3 - i * 0.2));
+    for (let i = 0; i < 4; i++) bands.push(part(0.33, 0.45, 0.07, bandMat(), 0, -0.08, 1.2 + i * 0.14));
+    gunRoot.userData.bands = bands;
+    // glow edge along the receiver top and the magazine lip
+    part(0.36, 0.06, 2.2, mat(0x7ff0ff, { emissive: 0x7ff0ff, emissiveIntensity: 1.2 }), 0, 0.27, 0);
+    part(0.28, 0.06, 0.52, mat(0x7ff0ff, { emissive: 0x7ff0ff, emissiveIntensity: 1.0 }), 0, -0.2, -0.55);
     gunRoot.position.set(0.55, -0.55, -1.0);
     gunRoot.rotation.set(0, 0.02, 0);
   }
@@ -550,12 +589,20 @@
     muzzleFlash.material.opacity = Math.max(0, muzzleFlash.material.opacity - dt * 12);
     muzzle.intensity = Math.max(0, muzzle.intensity - dt * 40);
     muzzleFlash.rotation.z = now * 30;
+    const bands = gunRoot.userData.bands;
+    for (let i = 0; i < bands.length; i++) {
+      const h = 0.56 + 0.07 * Math.sin(now * 2 + i * 0.7);
+      bands[i].material.color.setHSL(h, 1, 0.55);
+      bands[i].material.emissive.setHSL(h, 1, 0.42);
+    }
+    $('dash').textContent = P.dashCd > 0 ? 'Dash ' + P.dashCd.toFixed(1) + 's' : 'Dash ready';
+    $('dash').classList.toggle('cool', P.dashCd > 0);
     $('mag').textContent = W.mag;
     $('reserve').textContent = W.reserve;
   }
 
   const ray = new T.Raycaster();
-  const tracerMat = new T.LineBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.9 });
+  const tracerMat = new T.LineBasicMaterial({ color: 0x7ff0ff, transparent: true, opacity: 0.9 });
   const tracers = [];
   function fire() {
     W.recoil = Math.min(1, W.recoil + 0.35);
@@ -745,6 +792,7 @@
   function respawnPlayer() {
     P.dead = false; P.hp = P.maxHp; P.vel.set(0, 0, 0);
     P.pos.set((Math.random() - 0.5) * 16, 1.1, -62);
+    P.slide = 0; P.dashT = 0; P.dashCd = 0; P.jumps = 0;
     P.yaw = 0; P.pitch = 0; yawObj.rotation.y = 0; pitchObj.rotation.x = 0;
     W.mag = W.magSize; W.reloading = false; W.burst = 0; hideMsg();
   }
