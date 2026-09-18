@@ -43,10 +43,25 @@
   #ammo .gun { font-size: 13px; color: var(--cyan); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; font-variant-numeric: tabular-nums; }
   #ammo .gun.cool { color: var(--muted); }
   .top { position: absolute; left: 0; right: 0; top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; justify-content: center; }
-  #score { display: flex; gap: 22px; align-items: center; font-family: var(--display); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  #score .you { color: var(--cyan); }
-  #score .bots { color: var(--magenta); }
-  #score .sep { color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: .15em; }
+  #score { display: flex; gap: 0; align-items: stretch; font-family: var(--display); font-weight: 900; font-variant-numeric: tabular-nums; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35)); }
+  #score .chip { display: grid; place-items: center; min-width: 78px; padding: 6px 18px; font-size: 22px; color: #fff; }
+  #score .you { background: linear-gradient(180deg, #4aa3ff, #1f6fe0); clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); border-radius: 8px 0 0 8px; }
+  #score .bots { background: linear-gradient(180deg, #ff5b6e, #d62828); clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); border-radius: 0 8px 8px 0; }
+  #score .mid { background: #1a1d2e; min-width: 120px; margin: 0 -8px; padding: 6px 22px; font-size: 20px; line-height: 1; }
+  #score .mid small { display: block; font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+  #score .first { align-self: center; font-family: var(--body); font-weight: 700; font-size: 14px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); margin-right: 14px; }
+  #abil { position: absolute; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 10px; align-items: flex-end; }
+  .ab { position: relative; width: 58px; height: 58px; border-radius: 10px; background: linear-gradient(180deg, #4fb4ff, #1f6fe0); border: 2px solid #bfe6ff; box-shadow: 0 3px 8px rgba(0,0,0,.35); overflow: hidden; display: grid; place-items: center; font-family: var(--display); }
+  .ab .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: rgba(10,14,30,.7); }
+  .ab .k { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 900; color: #fff; }
+  .ab .n { font-family: var(--body); font-weight: 700; font-size: 12px; color: #fff; text-transform: uppercase; letter-spacing: .04em; margin-top: 8px; text-shadow: 0 1px 2px rgba(0,0,0,.5); position: relative; }
+  .ab.off { filter: saturate(.3) brightness(.7); }
+  body.touch #abil { bottom: auto; top: calc(128px + env(safe-area-inset-top, 0px)); }
+  body.touch .ab { width: 44px; height: 44px; }
+  body.touch .ab .n { font-size: 9px; }
+  body.touch #score .chip { min-width: 56px; padding: 4px 12px; font-size: 16px; }
+  body.touch #score .mid { min-width: 90px; font-size: 15px; }
+  body.touch #score .first { display: none; }
   #feed { position: absolute; right: 20px; top: calc(70px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
   #feed div { font-size: 14px; font-weight: 600; padding: 4px 10px; background: rgba(0,0,0,.45); border-left: 2px solid var(--magenta); }
   #feed div.you { border-left-color: var(--cyan); }
@@ -108,7 +123,12 @@
   <div id="hitmark"></div>
   <div id="msg"></div>
   <div class="top">
-    <div id="score" class="panel"><span class="you" id="youKills">0</span><span class="sep">YOU · BOTS</span><span class="bots" id="botKills">0</span></div>
+    <div id="score"><span class="first">First to 20!</span><span class="chip you" id="youKills">0</span><span class="chip mid"><span id="timer">00:00</span><small>Team Deathmatch</small></span><span class="chip bots" id="botKills">0</span></div>
+  </div>
+  <div id="abil">
+    <div class="ab" id="abDash"><div class="fill"></div><span class="k">Q</span><span class="n">Dash</span></div>
+    <div class="ab" id="abJump"><div class="fill"></div><span class="k">␣</span><span class="n">2× Jump</span></div>
+    <div class="ab" id="abSlide"><div class="fill"></div><span class="k">C</span><span class="n">Slide</span></div>
   </div>
   <div id="feed"></div>
   <div class="bottom">
@@ -140,7 +160,7 @@
 <div id="overlay">
   <div class="card">
     <h1>HYPERSHOT <span>ARENA</span></h1>
-    <p class="sub">City Arena · fan-made replica · 5 bots · first to 20 kills</p>
+    <p class="sub">City Arena · Team Deathmatch vs 5 bots · first to 20</p>
     <p class="stats hidden" id="roundStats"></p>
     <dl class="keys">
       <dt><kbd>W A S D</kbd></dt><dd>Move</dd>
@@ -173,8 +193,8 @@
   $('game').appendChild(renderer.domElement);
 
   const scene = new T.Scene();
-  scene.background = new T.Color(0x0b1024);
-  scene.fog = new T.Fog(0x0b1024, 120, 260);
+  scene.background = new T.Color(0x7fc4ff);
+  scene.fog = new T.Fog(0xa9d6ff, 180, 400);
 
   const camera = new T.PerspectiveCamera(80, 1, 0.1, 400);
   const yawObj = new T.Object3D();      // player position + yaw
@@ -183,9 +203,9 @@
   pitchObj.add(camera);
   scene.add(yawObj);
 
-  const hemi = new T.HemisphereLight(0x7ea6ff, 0x1a1030, 0.6);
+  const hemi = new T.HemisphereLight(0xbfe3ff, 0x5f9f3f, 0.75);
   scene.add(hemi);
-  const sun = new T.DirectionalLight(0xffe9d0, 0.9);
+  const sun = new T.DirectionalLight(0xfff6e0, 1.25);
   sun.position.set(70, 120, -50);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -219,32 +239,71 @@
   };
 
   // ---------- map: City Arena (fan reconstruction) ----------
-  // Units are studs. A city block cut into an arena: a main street running the
-  // long axis, a cross street, a raised central plaza with a fountain, storefront
-  // buildings with rooftop access by exterior stairs, back alleys, parked cars
-  // and bus shelters for cover. Spawns sit at the two street ends.
+  // Units are studs. Classic-Roblox city look from the reference screenshots:
+  // studded green baseplate, gray roads with white dashes, blue-glass office
+  // blocks with yellow trim, a tiered plaza with a big red R, trees, cars,
+  // a yellow arch over each end of the main street, bus shelters and rooftops
+  // reached by exterior stairs. Spawns sit at the two street ends.
+  function studTexture(base, stud, rx, ry) {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = base; ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = stud; ctx.beginPath(); ctx.arc(32, 32, 12, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.beginPath(); ctx.arc(29, 29, 7, 0, 7); ctx.fill();
+    const t = new T.CanvasTexture(c);
+    t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rx, ry);
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+  function windowTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#1b2a6b'; ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = '#3f8ae6'; ctx.fillRect(6, 6, 52, 52);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(6, 6, 52, 18);
+    ctx.fillStyle = '#1b2a6b'; ctx.fillRect(30, 6, 4, 52); ctx.fillRect(6, 30, 52, 4);
+    const t = new T.CanvasTexture(c);
+    t.wrapS = t.wrapT = T.RepeatWrapping;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+  function textTexture(text, bg, fg) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 160;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, 512, 160);
+    ctx.fillStyle = fg; ctx.font = '900 110px Orbitron, Rajdhani, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 84);
+    return new T.CanvasTexture(c);
+  }
+  const winTex = windowTexture();
   Object.assign(M, {
-    asphalt: mat(0x181b28, { roughness: 0.95 }),
-    paint: mat(0xd8dce8, { roughness: 0.9 }),
-    sidewalk: mat(0x2c3048),
-    plaza: mat(0x33385a),
-    plazaEdge: mat(0x4a5080),
-    water: mat(0x35a4ff, { emissive: 0x1e6fff, emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.3 }),
-    roof: mat(0x23263a),
-    ac: mat(0x6b7089, { metalness: 0.4, roughness: 0.6 }),
-    dumpster: mat(0x2f6b4a),
-    bus: mat(0xf2c14e, { roughness: 0.5 }),
-    busGlass: mat(0x1a1f2e, { roughness: 0.3, metalness: 0.4 }),
+    grass: new T.MeshStandardMaterial({ map: studTexture('#5fb63a', '#54a532', 75, 95), roughness: 0.95 }),
+    sidewalk: new T.MeshStandardMaterial({ map: studTexture('#c9ccd1', '#b8bbc1', 3, 95), roughness: 0.9 }),
+    sidewalkX: new T.MeshStandardMaterial({ map: studTexture('#c9ccd1', '#b8bbc1', 75, 3), roughness: 0.9 }),
+    plaza: new T.MeshStandardMaterial({ map: studTexture('#8f939a', '#7f838a', 20, 20), roughness: 0.9 }),
+    road: mat(0x55585f, { roughness: 0.95 }),
+    paint: mat(0xf4f4f4, { roughness: 0.9 }),
+    stair: mat(0x6f7378),
+    yellow: mat(0xf5c542, { roughness: 0.6 }),
+    red: mat(0xd62828, { roughness: 0.6 }),
+    navy: mat(0x1b2a6b),
+    roofDark: mat(0x22262e),
+    ac: mat(0x9aa0aa, { metalness: 0.3, roughness: 0.6 }),
+    trunk: mat(0x6b4a2b),
+    leaf: mat(0x4caf50), leaf2: mat(0x8bc34a),
+    pole: mat(0x1a1a1f, { metalness: 0.4, roughness: 0.5 }),
+    lamp: mat(0xffffff, { emissive: 0xfff4d6, emissiveIntensity: 0.8 }),
+    wheel: mat(0x1a1a1f, { roughness: 0.8 }),
+    carGlass: mat(0x24304a, { roughness: 0.2, metalness: 0.5 }),
+    cloud: mat(0xffffff, { roughness: 1 }),
+    dumpster: mat(0x2e7d32),
+    barrier: mat(0xb8bbc1),
     glass: new T.MeshStandardMaterial({ color: 0x9ad8ff, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.2 }),
-    pole: mat(0x777c92, { metalness: 0.6, roughness: 0.4 }),
-    lamp: mat(0xffe2a8, { emissive: 0xffe2a8, emissiveIntensity: 1.6 }),
-    winLit: mat(0xffd58a, { emissive: 0xffd58a, emissiveIntensity: 0.9 }),
-    winDark: mat(0x0f1220, { roughness: 0.3, metalness: 0.5 }),
-    skyline: mat(0x10131f),
-    barrier: mat(0x9a9db0),
+    bus: mat(0xf2c14e, { roughness: 0.5 }),
+    water: mat(0x35a4ff, { emissive: 0x1e6fff, emissiveIntensity: 0.3, roughness: 0.2, metalness: 0.3 }),
   });
-  const facades = [mat(0x3b4270), mat(0x4a3d63), mat(0x2f4d5a), mat(0x5c4a3e)];
-  const carColors = [mat(0xd94b5c, { metalness: 0.5, roughness: 0.4 }), mat(0x3a7bd5, { metalness: 0.5, roughness: 0.4 }), mat(0xe8e8ec, { metalness: 0.4, roughness: 0.4 }), mat(0x2a2e3a, { metalness: 0.5, roughness: 0.4 })];
+  const carColors = [mat(0x4cbb3c, { roughness: 0.4 }), mat(0xf2c14e, { roughness: 0.4 }), mat(0xd62828, { roughness: 0.4 }), mat(0x2f6fde, { roughness: 0.4 })];
 
   const colliders = []; // {min:Vector3, max:Vector3}
   const worldMeshes = [];
@@ -267,7 +326,7 @@
     return m;
   }
   function cyl(x, y, z, r, h, material, opts) {
-    const m = new T.Mesh(new T.CylinderGeometry(r, r, h, 24), material);
+    const m = new T.Mesh(new T.CylinderGeometry(r, r, h, 20), material);
     m.position.set(x, y + h / 2, z);
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m); worldMeshes.push(m);
@@ -292,130 +351,171 @@
     m.castShadow = false;
     return m;
   }
-  // rows of windows on one face of a building. axis 'x' = face perpendicular to x.
-  function windows(axis, facePos, from, to, baseY, topY, other) {
-    for (let y = baseY; y < topY - 2; y += 4) {
-      for (let p = from + 2; p < to - 1; p += 4) {
-        const lit = Math.random() < 0.55 ? M.winLit : M.winDark;
-        if (axis === 'x') deco(facePos, y, p, 0.2, 2.2, 2.4, lit);
-        else deco(p, y, facePos, 2.4, 2.2, 0.2, lit);
-      }
+  // blue-glass office block with yellow roof frame and corner columns
+  function glassBuilding(x, z, w, h, d) {
+    const tx = winTex.clone(); tx.needsUpdate = true; tx.repeat.set(d / 4, h / 4);
+    const tz = winTex.clone(); tz.needsUpdate = true; tz.repeat.set(w / 4, h / 4);
+    const mx = new T.MeshStandardMaterial({ map: tx, roughness: 0.35, metalness: 0.2 });
+    const mz = new T.MeshStandardMaterial({ map: tz, roughness: 0.35, metalness: 0.2 });
+    const m = new T.Mesh(new T.BoxGeometry(w, h, d), [mx, mx, M.roofDark, M.roofDark, mz, mz]);
+    m.position.set(x, h / 2, z); m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); worldMeshes.push(m);
+    colliders.push({ min: new T.Vector3(x - w / 2, 0, z - d / 2), max: new T.Vector3(x + w / 2, h, z + d / 2) });
+    deco(x, h, z - d / 2, w + 0.8, 0.8, 0.8, M.yellow); deco(x, h, z + d / 2, w + 0.8, 0.8, 0.8, M.yellow);
+    deco(x - w / 2, h, z, 0.8, 0.8, d + 0.8, M.yellow); deco(x + w / 2, h, z, 0.8, 0.8, d + 0.8, M.yellow);
+    for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) deco(x + cx * w / 2, 0, z + cz * d / 2, 0.9, h, 0.9, M.yellow);
+    return m;
+  }
+  function tree(x, z, big) {
+    const r = big ? 4.5 : 3.2, th = big ? 7 : 5;
+    cyl(x, 0, z, 0.7, th, M.trunk);
+    const s = new T.Mesh(new T.SphereGeometry(r, 12, 10), Math.random() < 0.5 ? M.leaf : M.leaf2);
+    s.position.set(x, th + r * 0.7, z); s.castShadow = true;
+    scene.add(s); worldMeshes.push(s);
+  }
+  function car(x, z, alongX, material) {
+    const L = 10, Wd = 5;
+    if (alongX) {
+      box(x, 0.8, z, L, 1.6, Wd, material);
+      box(x, 2.4, z, 5.5, 1.5, Wd - 0.4, M.carGlass);
+      for (const [ox, oz] of [[-3.2, -2.4], [3.2, -2.4], [-3.2, 2.4], [3.2, 2.4]]) { const w = new T.Mesh(new T.CylinderGeometry(0.9, 0.9, 0.7, 12), M.wheel); w.rotation.x = Math.PI / 2; w.position.set(x + ox, 0.9, z + oz); scene.add(w); worldMeshes.push(w); }
+    } else {
+      box(x, 0.8, z, Wd, 1.6, L, material);
+      box(x, 2.4, z, Wd - 0.4, 1.5, 5.5, M.carGlass);
+      for (const [ox, oz] of [[-2.4, -3.2], [2.4, -3.2], [-2.4, 3.2], [2.4, 3.2]]) { const w = new T.Mesh(new T.CylinderGeometry(0.9, 0.9, 0.7, 12), M.wheel); w.rotation.z = Math.PI / 2; w.position.set(x + ox, 0.9, z + oz); scene.add(w); worldMeshes.push(w); }
     }
   }
 
   const MAP_W = 150, MAP_D = 190;
-  // ground: asphalt
+  // baseplate
   {
-    const g = new T.Mesh(new T.PlaneGeometry(MAP_W, MAP_D), M.asphalt);
+    const g = new T.Mesh(new T.PlaneGeometry(MAP_W, MAP_D), M.grass);
     g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
     scene.add(g); worldMeshes.push(g);
     colliders.push({ min: new T.Vector3(-MAP_W, -10, -MAP_D), max: new T.Vector3(MAP_W, 0, MAP_D) });
   }
-  // road markings
-  for (let z = -90; z <= 90; z += 8) if (Math.abs(z) > 24) deco(0, 0.02, z, 0.6, 0.02, 4, M.paint);
-  for (let x = -70; x <= 70; x += 8) if (Math.abs(x) > 24) deco(x, 0.02, 0, 4, 0.02, 0.6, M.paint);
-  for (const zc of [-22, 22]) for (let x = -12; x <= 12; x += 3) deco(x, 0.02, zc, 2, 0.02, 3, M.paint); // crosswalks
-  for (const xc of [-22, 22]) for (let z = -10; z <= 10; z += 3) deco(xc, 0.02, z, 3, 0.02, 2, M.paint);
-  // sidewalks: raised curbs along both streets
+  // roads: main street on the long axis, cross street through the plaza
+  deco(0, 0, 0, 28, 0.06, MAP_D, M.road);
+  deco(0, 0, 0, MAP_W, 0.06, 24, M.road);
+  for (let z = -90; z <= 90; z += 8) if (Math.abs(z) > 24) deco(0, 0.07, z, 0.7, 0.02, 4, M.paint);
+  for (let x = -70; x <= 70; x += 8) if (Math.abs(x) > 24) deco(x, 0.07, 0, 4, 0.02, 0.7, M.paint);
+  for (const zc of [-22, 22]) for (let x = -12; x <= 12; x += 3) deco(x, 0.07, zc, 2, 0.02, 3, M.paint);
+  for (const xc of [-22, 22]) for (let z = -10; z <= 10; z += 3) deco(xc, 0.07, z, 3, 0.02, 2, M.paint);
+  // sidewalks: raised studded curbs along both streets
   box(-17, 0, 0, 6, 0.4, MAP_D, M.sidewalk);
   box(17, 0, 0, 6, 0.4, MAP_D, M.sidewalk);
-  box(0, 0, -15, MAP_W, 0.4, 6, M.sidewalk);
-  box(0, 0, 15, MAP_W, 0.4, 6, M.sidewalk);
-  // outer walls
-  const WALL_H = 40;
-  box(0, 0, -MAP_D / 2 - 1, MAP_W + 4, WALL_H, 2, M.skyline);
-  box(0, 0, MAP_D / 2 + 1, MAP_W + 4, WALL_H, 2, M.skyline);
-  box(-MAP_W / 2 - 1, 0, 0, 2, WALL_H, MAP_D + 4, M.skyline);
-  box(MAP_W / 2 + 1, 0, 0, 2, WALL_H, MAP_D + 4, M.skyline);
-
-  // central plaza with fountain
-  box(0, 0, 0, 40, 1, 40, M.plaza);
-  trim(0, 1.05, -19.8, 40, 0.4, M.lime); trim(0, 1.05, 19.8, 40, 0.4, M.lime);
-  trim(-19.8, 1.05, 0, 0.4, 40, M.lime); trim(19.8, 1.05, 0, 0.4, 40, M.lime);
-  cyl(0, 1, 0, 7, 1.8, M.plazaEdge);
-  cyl(0, 2.6, 0, 6.4, 0.3, M.water, { noCollide: true });
-  cyl(0, 1, 0, 1.4, 6.5, M.plazaEdge);
-  cyl(0, 7.3, 0, 2.4, 0.4, M.water, { noCollide: true });
-  for (const [px, pz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
-    box(px, 1, pz, 5, 2.4, 5, M.plazaEdge);
-    box(px, 3.4, pz, 3.6, 1.2, 3.6, M.dumpster, { noCollide: true });
+  box(0, 0, -15, MAP_W, 0.4, 6, M.sidewalkX);
+  box(0, 0, 15, MAP_W, 0.4, 6, M.sidewalkX);
+  // outer walls (low hedges of glass so the skyline stays visible)
+  const WALL_H = 30;
+  for (const [wx, wz, ww, wd] of [[0, -MAP_D / 2 - 1, MAP_W + 4, 2], [0, MAP_D / 2 + 1, MAP_W + 4, 2], [-MAP_W / 2 - 1, 0, 2, MAP_D + 4], [MAP_W / 2 + 1, 0, 2, MAP_D + 4]]) {
+    const m = box(wx, 0, wz, ww, WALL_H, wd, M.glass); m.castShadow = false;
   }
-  for (const [bx, bz, w, d] of [[-9, -17, 5, 1.4], [9, -17, 5, 1.4], [-9, 17, 5, 1.4], [9, 17, 5, 1.4]]) box(bx, 1, bz, w, 1.3, d, M.pole);
+
+  // central tiered plaza with the big red R on top
+  box(0, 0, 0, 40, 1, 40, M.plaza);
+  box(0, 1, 0, 30, 1.5, 30, M.plaza);
+  box(0, 2.5, 0, 20, 1.5, 20, M.plaza);
+  for (const s of [40, 30, 20]) {
+    const y = s === 40 ? 1.05 : s === 30 ? 2.55 : 4.05;
+    trim(0, y, -s / 2 + 0.3, s, 0.6, M.yellow); trim(0, y, s / 2 - 0.3, s, 0.6, M.yellow);
+    trim(-s / 2 + 0.3, y, 0, 0.6, s, M.yellow); trim(s / 2 - 0.3, y, 0, 0.6, s, M.yellow);
+  }
+  {
+    // the letter R, readable from the spawns along the main street
+    box(-3.5, 4, 0, 2.2, 13, 2.2, M.red);                 // stem
+    box(0.5, 15, 0, 8, 2.2, 2.2, M.red);                  // top bar
+    box(3.4, 10.5, 0, 2.2, 6.7, 2.2, M.red);              // bowl side
+    box(0.5, 9.8, 0, 8, 2.2, 2.2, M.red);                 // middle bar
+    const leg = deco(2.6, 0, 0, 2.2, 7.2, 2.2, M.red);    // diagonal leg
+    leg.position.set(2.2, 7.2, 0); leg.rotation.z = -0.55; leg.castShadow = true;
+    colliders.push({ min: new T.Vector3(0.6, 4, -1.1), max: new T.Vector3(4.6, 10, 1.1) });
+  }
+  for (const [px, pz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
+    box(px, 1, pz, 5, 2.4, 5, M.plaza);
+    box(px, 3.4, pz, 3.6, 1.2, 3.6, M.leaf, { noCollide: true });
+  }
+  for (const [bx, bz] of [[-9, -17], [9, -17], [-9, 17], [9, 17]]) box(bx, 1, bz, 5, 1.3, 1.4, M.trunk);
 
   // four building quadrants
   const quad = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
   quad.forEach(([sx, sz], qi) => {
     const accent = sz < 0 ? M.cyan : M.magenta;
-    const fA = facades[qi % facades.length], fB = facades[(qi + 1) % facades.length], fC = facades[(qi + 2) % facades.length];
-    // Building A: corner storefront with rooftop access
-    box(sx * 34, 0, sz * 35, 24, 14, 26, fA);
-    trim(sx * 34, 14.05, sz * 22.3, 24, 0.5, accent);
-    trim(sx * 22.3, 14.05, sz * 35, 0.5, 26, accent);
+    // Building A: corner office block with rooftop access
+    glassBuilding(sx * 35, sz * 35, 22, 14, 26);
     box(sx * 30, 14, sz * 30, 3, 2, 3, M.ac);
     box(sx * 40, 14, sz * 42, 4, 2.4, 3, M.ac);
     box(sx * 42, 14, sz * 26, 2.5, 3.5, 2.5, M.ac);
-    windows('x', sx * 21.9, sz > 0 ? 22 : -48, sz > 0 ? 48 : -22, 4, 14);
-    windows('z', sz * 21.9, sx > 0 ? 22 : -46, sx > 0 ? 46 : -22, 4, 14);
-    deco(sx * 21.85, 0.4, sz * 35, 0.3, 3.4, 20, M.glass);          // storefront glass
-    deco(sx * 20.8, 4.6, sz * 35, 2.6, 0.3, 22, accent);            // awning glow
+    trim(sx * 35, 14.85, sz * 22.6, 22, 0.5, accent);
     // exterior stair up the cross-street face of Building A
-    ramp(sx * 34, sz * 20, 4, 24, 14, sx > 0 ? 'x' : '-x', M.roof);
+    ramp(sx * 35, sz * 20, 4, 22, 14, sx > 0 ? 'x' : '-x', M.stair);
     // alley between A and B with a dumpster
-    box(sx * 34, 0, sz * 51, 3, 3, 4, M.dumpster);
-    // Building B: taller, neon billboard, no roof access
-    box(sx * 34, 0, sz * 67, 24, 20, 26, fB);
-    windows('x', sx * 21.9, sz > 0 ? 54 : -80, sz > 0 ? 80 : -54, 4, 20);
-    deco(sx * 21.8, 8, sz * 67, 0.3, 6, 12, accent);                // neon sign
-    deco(sx * 34, 20, sz * 67, 14, 6, 0.6, accent);                 // rooftop billboard
-    deco(sx * 34, 20, sz * 60, 0.6, 5, 0.6, M.pole); deco(sx * 34, 20, sz * 74, 0.6, 5, 0.6, M.pole);
-    // Building C: tall backdrop block behind a narrow back alley
-    box(sx * 62.5, 0, sz * 51, 25, 28, 58, fC);
-    windows('x', sx * 49.9, sz > 0 ? 22 : -80, sz > 0 ? 80 : -22, 4, 28);
-    box(sx * 48, 0, sz * 60, 2, 2, 2, M.barrier);                   // hop-over crate in the alley
+    box(sx * 35, 0, sz * 51, 3, 3, 4, M.dumpster);
+    // Building B: taller block with a HYPERSHOT sign on the roof
+    glassBuilding(sx * 35, sz * 67, 22, 20, 26);
+    {
+      const signTex = textTexture('HYPERSHOT', '#d62828', '#ffffff');
+      const sm = new T.MeshStandardMaterial({ map: signTex, roughness: 0.6 });
+      const s = new T.Mesh(new T.BoxGeometry(0.6, 5, 16), [sm, sm, M.red, M.red, M.red, M.red]);
+      s.position.set(sx * 35, 23.3, sz * 67); scene.add(s); worldMeshes.push(s);
+      deco(sx * 35, 20.8, sz * 61, 0.6, 2.5, 0.6, M.pole); deco(sx * 35, 20.8, sz * 73, 0.6, 2.5, 0.6, M.pole);
+    }
+    // Building C: tall tower behind a narrow back alley
+    glassBuilding(sx * 62.5, sz * 51, 25, 36, 58);
+    box(sx * 48, 0, sz * 60, 2, 2, 2, M.barrier);
     box(sx * 48, 0, sz * 32, 2, 2, 2, M.barrier);
     // end-zone building closing the corner
-    box(sx * 62, 0, sz * 88, 26, 18, 14, fA);
-    windows('z', sz * 80.9, sx > 0 ? 49 : -75, sx > 0 ? 75 : -49, 4, 18);
-    // parked cars on the main street
-    for (const cz of [35, 68]) {
-      const cm = carColors[(qi + cz) % carColors.length];
-      box(sx * 8, 0, sz * cz, 5, 1.6, 10, cm);
-      box(sx * 8, 1.6, sz * cz, 4.6, 1.5, 5.5, M.busGlass);
-    }
-    // car on the cross street
-    box(sx * 38, 0, sz * 6, 10, 1.6, 5, carColors[qi % carColors.length]);
-    box(sx * 38, 1.6, sz * 6, 5.5, 1.5, 4.6, M.busGlass);
+    glassBuilding(sx * 62, sz * 88, 26, 18, 14);
+    // trees on the grass strip between sidewalk and buildings
+    tree(sx * 22, sz * 42, false); tree(sx * 22, sz * 58, true); tree(sx * 22, sz * 76, false);
+    tree(sx * 28, sz * 8, true);
+    // parked cars
+    car(sx * 8, sz * 35, false, carColors[qi % 4]);
+    car(sx * 8, sz * 68, false, carColors[(qi + 1) % 4]);
+    car(sx * 38, sz * 6, true, carColors[(qi + 2) % 4]);
     // street lights along the sidewalk
     for (const lz of [24, 50, 78]) {
       box(sx * 16, 0, sz * lz, 0.5, 12, 0.5, M.pole);
-      deco(sx * 15, 12, sz * lz, 3, 0.5, 1.2, M.lamp);
+      deco(sx * 15, 12, sz * lz, 3, 0.6, 1.2, M.lamp);
     }
     // bus shelter on the sidewalk
-    box(sx * 17, 0, sz * 62, 5, 0.4, 10, M.sidewalk);
-    box(sx * 17, 5, sz * 62, 5.5, 0.4, 10.5, M.roof);
+    box(sx * 17, 0.4, sz * 62, 5, 0.2, 10, M.plaza);
+    box(sx * 17, 5, sz * 62, 5.5, 0.4, 10.5, M.yellow);
     box(sx * 17, 0, sz * 57.2, 0.4, 5, 0.4, M.pole); box(sx * 17, 0, sz * 66.8, 0.4, 5, 0.4, M.pole);
     box(sx * 19.2, 0, sz * 62, 0.2, 5, 9.6, M.glass);
     // bus parked across the end zone
     box(sx * 30, 0, sz * 88, 22, 7, 8, M.bus);
-    deco(sx * 30, 3.2, sz * 84, 21, 2.4, 0.2, M.busGlass); deco(sx * 30, 3.2, sz * 92, 21, 2.4, 0.2, M.busGlass);
-    trim(sx * 30, 7.05, sz * 88, 22, 8, accent);
+    deco(sx * 30, 3.2, sz * 84, 21, 2.4, 0.2, M.carGlass); deco(sx * 30, 3.2, sz * 92, 21, 2.4, 0.2, M.carGlass);
     // concrete barriers at the end of the street
     box(sx * 10, 0, sz * 80, 6, 2.2, 1.6, M.barrier);
   });
-  // spawn glow strips
-  trim(0, 0.05, -90, 20, 1, M.cyan);
-  trim(0, 0.05, 90, 20, 1, M.magenta);
-
-  // skyline beyond the walls
-  for (let i = 0; i < 26; i++) {
-    const a = (i / 26) * Math.PI * 2;
-    const rx = 95 + Math.random() * 40, rz = 115 + Math.random() * 50;
-    const h = 40 + Math.random() * 70;
-    const m = deco(Math.cos(a) * rx, 0, Math.sin(a) * rz, 12 + Math.random() * 10, h, 12 + Math.random() * 10, M.skyline);
-    m.receiveShadow = false;
-    if (i % 3 === 0) deco(m.position.x, h, m.position.z, 1, 8, 1, i % 2 ? M.cyan : M.magenta);
+  // yellow arches over the main street
+  for (const az of [-45, 45]) {
+    const arch = new T.Mesh(new T.TorusGeometry(15, 1.2, 10, 40, Math.PI), M.yellow);
+    arch.position.set(0, 0, az); arch.castShadow = true;
+    scene.add(arch); worldMeshes.push(arch);
   }
-  scene.fog = new T.Fog(0x0b1024, 150, 320);
+  // spawn markers
+  trim(0, 0.08, -90, 20, 1, M.cyan);
+  trim(0, 0.08, 90, 20, 1, M.magenta);
+
+  // skyline of glass towers beyond the walls, and clouds
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2 + 0.1;
+    const rx = 100 + Math.random() * 40, rz = 125 + Math.random() * 45;
+    const h = 40 + Math.random() * 60, w = 14 + Math.random() * 10;
+    const tx = winTex.clone(); tx.needsUpdate = true; tx.repeat.set(w / 4, h / 4);
+    const m = new T.Mesh(new T.BoxGeometry(w, h, w), new T.MeshStandardMaterial({ map: tx, roughness: 0.4 }));
+    m.position.set(Math.cos(a) * rx, h / 2, Math.sin(a) * rz);
+    scene.add(m); worldMeshes.push(m);
+    deco(m.position.x, h, m.position.z, w + 0.8, 0.8, w + 0.8, M.yellow);
+  }
+  for (let i = 0; i < 14; i++) {
+    const c = deco((Math.random() - 0.5) * 320, 70 + Math.random() * 30, (Math.random() - 0.5) * 380, 14 + Math.random() * 20, 3, 8 + Math.random() * 10, M.cloud);
+    c.receiveShadow = false;
+  }
+  scene.background = new T.Color(0x7fc4ff);
+  scene.fog = new T.Fog(0xa9d6ff, 180, 400);
 
   // ---------- Roblox-style blocky avatar ----------
   const skinTones = [0xf5c6a0, 0xe0ac7e, 0xc68642, 0x8d5524, 0xffd1b3];
@@ -1010,13 +1110,14 @@
     showOverlay('Play again');
   }
   function restartRound() {
-    roundOver = false; P.kills = 0; P.deaths = 0; botScore = 0;
+    roundOver = false; P.kills = 0; P.deaths = 0; botScore = 0; roundTime = 0;
     $('youKills').textContent = 0; $('botKills').textContent = 0;
     bots.forEach((b, i) => resetBot(b, i));
     respawnPlayer(); W.reserve = 120;
   }
 
-  let now = 0, last = performance.now();
+  let now = 0, last = performance.now(), roundTime = 0;
+  const abDashFill = $('abDash').querySelector('.fill'), abSlideFill = $('abSlide').querySelector('.fill'), abJump = $('abJump');
   function frame(t) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (t - last) / 1000); last = t; now += dt;
@@ -1033,6 +1134,12 @@
     $('hpnum').textContent = hp;
     $('hpfill').style.width = hp + '%';
     $('hpfill').classList.toggle('low', hp < 35);
+    if (running && !roundOver) roundTime += dt;
+    const mm = Math.floor(roundTime / 60), ss = Math.floor(roundTime % 60);
+    $('timer').textContent = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+    abDashFill.style.height = (P.dashCd / 5 * 100) + '%';
+    abSlideFill.style.height = (P.slideCd / 1.1 * 100) + '%';
+    abJump.classList.toggle('off', !P.onGround && P.jumps <= 0);
     if (hitTimer > 0) { hitTimer -= dt; if (hitTimer <= 0) hitmark.style.opacity = 0; }
     if (msgTimer < 1e8) { msgTimer -= dt; if (msgTimer <= 0) hideMsg(); }
     if (now - P.lastHit > 0.25) $('dmg').style.boxShadow = 'inset 0 0 120px rgba(255,75,92,0)';

@@ -6,8 +6,8 @@ A fan-made, single-file browser FPS inspired by the Roblox game *Hypershot*
 The map is a reconstruction of **City Arena**, one of the map names listed on
 the community wiki. No layout, screenshots or callouts were reachable from the
 build environment, so the geometry is built from the name and the game's known
-clean, neon-lit city style: a main street and cross street, a raised plaza with
-a fountain, storefront buildings with exterior stairs to the rooftops, back
+classic-Roblox city style seen in gameplay screenshots: a studded green baseplate, a main street and cross street, a tiered plaza with
+a big red R, blue-glass office blocks with yellow trim and exterior stairs to the rooftops, trees, yellow arches, back
 alleys, parked cars, bus shelters and a bus across each spawn end. It is not an
 asset rip and is not an exact copy.
 
