@@ -195,14 +195,16 @@ function updatePlay(dt){
   if(P.x<WORLD.x0)P.x=WORLD.x0; if(P.x+P.w>WORLD.x1)P.x=WORLD.x1-P.w;
   // vertical
   P.y+=P.vy*dt;
-  for(const b of BOUNCERS){ if(P.vy>0&&prevBottom<=b.y+1&&overlap(P,b)){P.y=b.y-P.h;P.vy=-1150;b.squash=1;jumpBuffer=0;} }
+  const xo=s=>P.x<s.x+s.w&&P.x+P.w>s.x;
+  for(const b of BOUNCERS){ if(P.vy>0&&prevBottom<=b.y+1&&P.y+P.h>=b.y&&xo(b)){P.y=b.y-P.h;P.vy=-1150;b.squash=1;jumpBuffer=0;} }
   const allSolids=SOLIDS.concat([MOVER]);
   for(const s of allSolids){
-    if(!overlap(P,s))continue;
-    if(s.oneway){ if(P.vy>=0&&prevBottom<=s.y+1){P.y=s.y-P.h;P.vy=0;P.onGround=true;} continue; }
-    if(P.vy>0&&prevBottom<=s.y+1){P.y=s.y-P.h;P.vy=0;P.onGround=true; if(s===MOVER)P.onMover=true;}
-    else if(P.vy<0){P.y=s.y+s.h;P.vy=0;}
-    else if(P.vy>0){P.y=s.y-P.h;P.vy=0;P.onGround=true;}
+    if(!xo(s))continue;
+    // crossing test (not overlap) so fast falls never tunnel through thin platforms
+    if(P.vy>=0&&prevBottom<=s.y+1&&P.y+P.h>=s.y){P.y=s.y-P.h;P.vy=0;P.onGround=true; if(s===MOVER)P.onMover=true; continue;}
+    if(s.oneway||!overlap(P,s))continue;
+    if(P.vy<0){P.y=s.y+s.h;P.vy=0;}
+    else{P.y=s.y-P.h;P.vy=0;P.onGround=true;}
   }
   // slopes
   const cx=P.x+P.w/2;
