@@ -93,7 +93,7 @@ const ENEMIES=[
 const MOVER={x:760,y:505,w:110,h:35,minX:760,maxX:1050,speed:85,dir:1};
 const COINS=[{x:1245,y:575}];
 // Jump-up clouds: land on one and it launches you upwards.
-const BOUNCERS=[{x:990,y:950,w:100,h:22,squash:0}];
+const BOUNCERS=[{x:990,y:950,w:80,h:22,squash:0}];
 const GOAL={x:395,y:585,w:75,h:135};
 const TREES=[[710,615],[1180,615],[990,1025],[1370,1215]];
 const MOUNTAINS=[[1430,1215,60,80],[1470,1215,70,120],[1520,1215,50,90]];
@@ -184,10 +184,10 @@ function updatePlay(dt){
   else{ if(P.vx>0)P.vx=Math.max(0,P.vx-FRICTION*dt); else P.vx=Math.min(0,P.vx+FRICTION*dt); }
   P.vx=Math.max(-SPEED,Math.min(SPEED,P.vx));
   jumpBuffer-=dt; P.coyote-=dt;
-  if(jumpBuffer>0&&(P.onGround||P.coyote>0)){P.vy=-JUMP;P.onGround=false;P.coyote=0;jumpBuffer=0;}
-  if(!holdJump&&P.vy<-250)P.vy=-250; // variable jump height
+  if(jumpBuffer>0&&(P.onGround||P.coyote>0)){P.vy=-JUMP;P.onGround=false;P.coyote=0;jumpBuffer=0;P.jumping=true;}
+  if(P.jumping&&!holdJump&&P.vy<-250)P.vy=-250; // variable jump height (player jumps only, not bounces)
   P.vy+=GRAV*dt; if(P.vy>1400)P.vy=1400;
-  const wasGround=P.onGround; P.onGround=false; P.onMover=false;
+  const wasGround=P.onGround; if(P.onGround)P.jumping=false; P.onGround=false; P.onMover=false;
   const prevBottom=P.y+P.h;
   // horizontal
   P.x+=P.vx*dt;
@@ -196,7 +196,7 @@ function updatePlay(dt){
   // vertical
   P.y+=P.vy*dt;
   const xo=s=>P.x<s.x+s.w&&P.x+P.w>s.x;
-  for(const b of BOUNCERS){ if(P.vy>0&&prevBottom<=b.y+1&&P.y+P.h>=b.y&&xo(b)){P.y=b.y-P.h;P.vy=-1150;b.squash=1;jumpBuffer=0;} }
+  for(const b of BOUNCERS){ if(P.vy>0&&prevBottom<=b.y+1&&P.y+P.h>=b.y&&xo(b)){P.y=b.y-P.h;P.vy=-920;b.squash=1;jumpBuffer=0;P.jumping=false;} }
   const allSolids=SOLIDS.concat([MOVER]);
   for(const s of allSolids){
     if(!xo(s))continue;
