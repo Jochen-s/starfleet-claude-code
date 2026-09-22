@@ -84,13 +84,15 @@ const HAZARDS=[
   {x:600,y:636,w:80,h:14,kind:'up'},     // small spikes on the small upper platform
   {x:660,y:810,w:210,h:70,kind:'mouth'}, // the spike mouth
 ];
-const ENEMIES=[
-  {x:585,y:628,minX:552,maxX:598,speed:35},
-  {x:1120,y:593,minX:1090,maxX:1290,speed:60},
-  {x:1670,y:818,minX:1612,maxX:1698,speed:50},
-  {x:1800,y:953,minX:1742,maxX:1848,speed:60},
+// Spiky domes: launchers. Touching one ALWAYS fires you straight up.
+const LAUNCHERS=[
+  {x:585,y:628},
+  {x:1120,y:593},
+  {x:1670,y:818},
+  {x:1800,y:953},
   {x:900,y:1195,hover:true,baseY:1195,amp:28,speed:1.6},
 ];
+const LAUNCH_VY=1000;
 const MOVER={x:760,y:505,w:110,h:35,minX:760,maxX:1050,speed:85,dir:1};
 const COINS=[{x:1245,y:575}];
 // Jump-up clouds: land on one and it launches you upwards.
@@ -162,7 +164,7 @@ function resetLevel(){
   P.x=START.x;P.y=START.y;P.vx=0;P.vy=0;P.onGround=false;P.face=1;
   coins=0;deaths=0;time=0;coinsTaken=COINS.map(()=>false);
   MOVER.x=MOVER.minX;MOVER.dir=1;BOUNCERS.forEach(b=>b.squash=0);
-  ENEMIES.forEach(e=>{e.dir=1;if(!e.hover)e.x=(e.minX+e.maxX)/2;});
+  LAUNCHERS.forEach(e=>e.squash=0);
   cam.x=P.x-W/2;cam.y=P.y-H/2;
 }
 function respawn(){P.x=START.x;P.y=START.y;P.vx=0;P.vy=0;}
@@ -177,12 +179,8 @@ function updatePlay(dt){
   if(MOVER.x>MOVER.maxX){MOVER.x=MOVER.maxX;MOVER.dir=-1;}
   if(MOVER.x<MOVER.minX){MOVER.x=MOVER.minX;MOVER.dir=1;BOUNCERS.forEach(b=>b.squash=0);}
   if(P.onMover)P.x+=MOVER.x-prevMx;
-  // enemies
-  for(const e of ENEMIES){
-    if(e.hover){e.y=e.baseY+Math.sin(time*e.speed)*e.amp;continue;}
-    e.x+=e.speed*e.dir*dt;
-    if(e.x>e.maxX){e.x=e.maxX;e.dir=-1;} if(e.x<e.minX){e.x=e.minX;e.dir=1;}
-  }
+  // launchers
+  for(const e of LAUNCHERS){ if(e.hover)e.y=e.baseY+Math.sin(time*e.speed)*e.amp; e.squash=Math.max(0,(e.squash||0)-dt*3); }
   // input
   const left=keys.ArrowLeft||keys.KeyA, right=keys.ArrowRight||keys.KeyD;
   const holdJump=keys.Space||keys.ArrowUp||keys.KeyW;
@@ -224,7 +222,7 @@ function updatePlay(dt){
   const hit={x:P.x+5,y:P.y+4,w:P.w-10,h:P.h-6};
   let die=false;
   for(const h of HAZARDS){ const inner=h.kind==='mouth'?{x:h.x,y:h.y+8,w:h.w,h:h.h-16}:{x:h.x,y:h.y+10,w:h.w,h:h.h-10}; if(h.kind==='down')inner.y=h.y; if(overlap(hit,inner))die=true; }
-  for(const e of ENEMIES){ if(overlap(hit,{x:e.x-13,y:e.y+2,w:26,h:20}))die=true; }
+  for(const e of LAUNCHERS){ if(overlap(hit,{x:e.x-16,y:e.y-4,w:32,h:26})){P.vy=-LAUNCH_VY;P.jumping=false;P.onGround=false;e.squash=1;jumpBuffer=0;} }
   if(P.y>WORLD.y1)die=true;
   if(die){deaths++;state='dead';deadTimer=0.7;return;}
   // coins
@@ -282,10 +280,12 @@ function bouncer(b,t){
   ctx.restore();
 }
 function enemy(e){
+  ctx.save();const sq=e.squash||0;ctx.translate(e.x,e.y+22);ctx.scale(1+sq*0.3,1-sq*0.4);ctx.translate(-e.x,-(e.y+22));
   ink(2.5);ctx.fillStyle='#f5f5f9';
   ctx.beginPath();ctx.arc(e.x,e.y+22,14,Math.PI,0);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.beginPath();for(let a=-70;a<=70;a+=35){const r=a*Math.PI/180;ctx.moveTo(e.x+Math.sin(r)*14,e.y+22-Math.cos(r)*14);ctx.lineTo(e.x+Math.sin(r)*21,e.y+22-Math.cos(r)*21);}ctx.stroke();
   ctx.fillStyle='#1d1d22';ctx.beginPath();ctx.arc(e.x-4,e.y+16,1.8,0,7);ctx.arc(e.x+4,e.y+16,1.8,0,7);ctx.fill();
+  ctx.restore();
 }
 function coin(c,t){
   ink(2.5);const s=1+Math.sin(t*4)*0.08;ctx.save();ctx.translate(c.x,c.y);ctx.scale(s,1);
@@ -345,7 +345,7 @@ function drawWorld(t){
   for(const b of BOUNCERS)bouncer(b,t);
   door();
   COINS.forEach((c,i)=>{if(!coinsTaken[i])coin(c,t);});
-  for(const e of ENEMIES)enemy(e);
+  for(const e of LAUNCHERS)enemy(e);
   if(state!=='dead')player();
   ctx.restore();
   // HUD
@@ -367,7 +367,7 @@ function drawMenu(t){
   hand('a pencil & paper platformer',W/2,160,22,'center');
   if(showControls){
     const c=showControls==='controls'
-      ?['Move: Arrow keys or A / D','Jump: Space, W or Up (hold for higher)','Pause: Esc     Restart: R','Collect the coin, avoid spikes and','the spiky critters, reach the portal.','','Press Enter or click to go back']
+      ?['Move: Arrow keys or A / D','Jump: Space, W or Up (hold for higher)','Pause: Esc     Restart: R','Collect the coin and avoid the spikes.','Spiky domes and jump-up clouds','always launch you up. Reach the portal.','','Press Enter or click to go back']
       :['Level design: the hand-drawn sketch','(Level 01, Hintergrund, Coins 01, Start)','Built as a 1:1 copy of the paper layout','on graph paper, with pencil ink.','','Press Enter or click to go back'];
     overlayBox(showControls==='controls'?'Controls':'Credits',c);return;
   }
