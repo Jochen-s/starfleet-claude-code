@@ -10,17 +10,18 @@
   :root[data-theme="dark"]{ --bg:#141418; }
   html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",cursive;}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
-  canvas{background:var(--paper);image-rendering:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);max-width:100vw;max-height:100vh;aspect-ratio:16/9;}
+  canvas{outline:none;background:var(--paper);image-rendering:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);max-width:100vw;max-height:100vh;aspect-ratio:16/9;}
   #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:12px;pointer-events:none;}
   #touch button{pointer-events:auto;width:70px;height:70px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.15);color:#fff;font-size:28px;margin:6px;}
-  @media (pointer:coarse){#touch{display:flex;}}
+  @media (pointer:coarse), (max-width:900px){#touch{display:flex;}}
+  body.kb #touch{display:none;}
 </style>
 </head>
 <body>
-<div id="wrap"><canvas id="c" width="960" height="540"></canvas></div>
+<div id="wrap"><canvas id="c" width="960" height="540" tabindex="0"></canvas></div>
 <div id="touch">
   <div><button data-k="ArrowLeft">◀</button><button data-k="ArrowRight">▶</button></div>
-  <div><button data-k="Space">⤒</button></div>
+  <div><button data-k="Enter">▶</button><button data-k="Space">⤒</button></div>
 </div>
 <script>
 'use strict';
@@ -102,7 +103,10 @@ const CLOUDS=[[470,650,70],[620,790,55],[740,760,60],[930,790,65],[1140,560,50],
 
 // ------------------------------------------------------------------
 const keys={};
-addEventListener('keydown',e=>{keys[e.code]=true; if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault(); onKey(e.code);});
+addEventListener('keydown',e=>{keys[e.code]=true; if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault(); document.body.classList.add('kb'); onKey(e.code);});
+// keep keyboard focus on the game (needed when the page runs inside an embedded frame)
+function focusGame(){try{cv.focus({preventScroll:true});}catch(e){}}
+addEventListener('load',focusGame); addEventListener('pointerdown',focusGame); addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 addEventListener('keyup',e=>{keys[e.code]=false;});
 document.querySelectorAll('#touch button').forEach(b=>{
   const k=b.dataset.k;
@@ -144,7 +148,9 @@ cv.addEventListener('pointerdown',e=>{
   const mx=(e.clientX-r.left)*W/r.width, my=(e.clientY-r.top)*H/r.height;
   if(state==='menu'){
     if(showControls){showControls=false;return;}
-    MENU.forEach((m,i)=>{ if(my>250+i*58-24&&my<250+i*58+24&&mx>W/2-160&&mx<W/2+160){menuIndex=i;selectMenu(i);} });
+    let hit=false;
+    MENU.forEach((m,i)=>{ if(my>250+i*58-24&&my<250+i*58+24&&mx>W/2-160&&mx<W/2+160){menuIndex=i;selectMenu(i);hit=true;} });
+    if(!hit)selectMenu(0);
   }else if(state==='won'){state='menu';}
   else if(state==='pause'){state='play';}
 });
@@ -370,7 +376,7 @@ function drawMenu(t){
     ink(sel?4:2.5);ctx.fillStyle=sel?'#2b2b30':'#f5f5f9';ctx.fillRect(W/2-160,y-24,320,48);ctx.strokeRect(W/2-160,y-24,320,48);
     ctx.fillStyle=sel?'#f5f5f9':'#3a3a44';ctx.font='24px "Comic Sans MS","Chalkboard SE","Segoe Print",cursive';ctx.textAlign='center';ctx.fillText(m,W/2,y+9);
   });
-  hand('Up/Down + Enter, or click',W/2,470,16,'center');
+  hand('Press Enter, or click / tap anywhere to play',W/2,470,18,'center');
   // little preview of the hero and an enemy
   P.x=W/2+220;P.y=250;P.face=-1;player();enemy({x:W/2-230,y:250});
 }
