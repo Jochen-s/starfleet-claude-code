@@ -93,7 +93,7 @@ const ENEMIES=[
 const MOVER={x:760,y:505,w:110,h:35,minX:760,maxX:1050,speed:85,dir:1};
 const COINS=[{x:1245,y:575}];
 // Jump-up clouds: land on one and it launches you upwards.
-const BOUNCERS=[{x:1080,y:950,w:100,h:22,squash:0}];
+const BOUNCERS=[{x:990,y:950,w:100,h:22,squash:0}];
 const GOAL={x:395,y:585,w:75,h:135};
 const TREES=[[710,615],[1180,615],[990,1025],[1370,1215]];
 const MOUNTAINS=[[1430,1215,60,80],[1470,1215,70,120],[1520,1215,50,90]];
@@ -319,7 +319,7 @@ function drawWorld(t){
   ink(2.5);for(const [x,y,w,h] of MOUNTAINS){ctx.fillStyle='#f5f5f9';ctx.beginPath();ctx.moveTo(x-w/2,y);ctx.lineTo(x,y-h);ctx.lineTo(x+w/2,y);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-8,y-h+18);ctx.lineTo(x+2,y-h+30);ctx.lineTo(x-6,y-h+42);ctx.stroke();}
   sign();
   hand('Level 01',400,420,24);
-  hand('Coin',1240,545,16,'center'); hand('jump up',1130,930,14,'center');
+  hand('Coin',1240,545,16,'center'); hand('jump up',1040,930,14,'center');
   hand('Hintergrund',1120,410,20); arrow(1110,412,1075,470);
   hand('Start',420,1130,22); arrow(430,1140,430,1190);
   for(const [x,y] of TREES)tree(x,y);
