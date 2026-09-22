@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Level 01</title>
 <style>
-  :root { --paper:#f5f5f9; --ink:#1d1d22; --grid:rgba(110,130,210,0.35); }
-  html,body{margin:0;height:100%;background:#2a2a30;overflow:hidden;font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",cursive;}
+  :root { --paper:#f5f5f9; --ink:#1d1d22; --bg:#2a2a30; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#141418; } }
+  :root[data-theme="dark"]{ --bg:#141418; }
+  html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",cursive;}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
   canvas{background:var(--paper);image-rendering:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);max-width:100vw;max-height:100vh;aspect-ratio:16/9;}
   #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:12px;pointer-events:none;}
@@ -90,6 +92,8 @@ const ENEMIES=[
 ];
 const MOVER={x:760,y:505,w:110,h:35,minX:760,maxX:1050,speed:85,dir:1};
 const COINS=[{x:1245,y:575}];
+// Jump-up clouds: land on one and it launches you upwards.
+const BOUNCERS=[{x:1080,y:950,w:100,h:22,squash:0}];
 const GOAL={x:395,y:585,w:75,h:135};
 const TREES=[[710,615],[1180,615],[990,1025],[1370,1215]];
 const MOUNTAINS=[[1430,1215,60,80],[1470,1215,70,120],[1520,1215,50,90]];
@@ -151,7 +155,7 @@ let coins=0,deaths=0,time=0,deadTimer=0,coinsTaken=[],cam={x:0,y:0},finalTime=0;
 function resetLevel(){
   P.x=START.x;P.y=START.y;P.vx=0;P.vy=0;P.onGround=false;P.face=1;
   coins=0;deaths=0;time=0;coinsTaken=COINS.map(()=>false);
-  MOVER.x=MOVER.minX;MOVER.dir=1;
+  MOVER.x=MOVER.minX;MOVER.dir=1;BOUNCERS.forEach(b=>b.squash=0);
   ENEMIES.forEach(e=>{e.dir=1;if(!e.hover)e.x=(e.minX+e.maxX)/2;});
   cam.x=P.x-W/2;cam.y=P.y-H/2;
 }
@@ -165,7 +169,7 @@ function updatePlay(dt){
   const prevMx=MOVER.x;
   MOVER.x+=MOVER.speed*MOVER.dir*dt;
   if(MOVER.x>MOVER.maxX){MOVER.x=MOVER.maxX;MOVER.dir=-1;}
-  if(MOVER.x<MOVER.minX){MOVER.x=MOVER.minX;MOVER.dir=1;}
+  if(MOVER.x<MOVER.minX){MOVER.x=MOVER.minX;MOVER.dir=1;BOUNCERS.forEach(b=>b.squash=0);}
   if(P.onMover)P.x+=MOVER.x-prevMx;
   // enemies
   for(const e of ENEMIES){
@@ -191,6 +195,7 @@ function updatePlay(dt){
   if(P.x<WORLD.x0)P.x=WORLD.x0; if(P.x+P.w>WORLD.x1)P.x=WORLD.x1-P.w;
   // vertical
   P.y+=P.vy*dt;
+  for(const b of BOUNCERS){ if(P.vy>0&&prevBottom<=b.y+1&&overlap(P,b)){P.y=b.y-P.h;P.vy=-1150;b.squash=1;jumpBuffer=0;} }
   const allSolids=SOLIDS.concat([MOVER]);
   for(const s of allSolids){
     if(!overlap(P,s))continue;
@@ -257,6 +262,17 @@ function spikes(h){
       ctx.beginPath();ctx.moveTo(x+sw/2,h.y+h.h);ctx.lineTo(x+sw,h.y+h.h-th);ctx.lineTo(x+sw+sw/2,h.y+h.h);ctx.closePath();ctx.fillStyle='#2b2b30';ctx.fill();ctx.stroke();}
   }
 }
+function bouncer(b,t){
+  b.squash=Math.max(0,b.squash-0.03);
+  const cx=b.x+b.w/2,cy=b.y+b.h/2+Math.sin(t*3)*3;
+  ctx.save();ctx.translate(cx,cy);ctx.scale(1+b.squash*0.25,1-b.squash*0.35);
+  const bumps=[[0,0,26],[-32,6,18],[32,6,19],[-14,-10,18],[14,-11,18]];
+  ctx.fillStyle='#f5f5f9';ctx.beginPath();for(const [dx,dy,rr] of bumps){ctx.moveTo(dx+rr,dy);ctx.arc(dx,dy,rr,0,Math.PI*2);}ctx.fill();
+  ink(2.5);ctx.beginPath();for(const [dx,dy,rr] of bumps){ctx.moveTo(dx+rr,dy);ctx.arc(dx,dy,rr,0,Math.PI*2);}ctx.stroke();
+  ctx.fillStyle='#f5f5f9';ctx.beginPath();for(const [dx,dy,rr] of bumps){ctx.moveTo(dx+rr-1.5,dy);ctx.arc(dx,dy,rr-1.5,0,Math.PI*2);}ctx.fill();
+  ink(3);ctx.beginPath();for(const ox of [-18,0,18]){ctx.moveTo(ox-7,6);ctx.lineTo(ox,-6);ctx.lineTo(ox+7,6);}ctx.stroke();
+  ctx.restore();
+}
 function enemy(e){
   ink(2.5);ctx.fillStyle='#f5f5f9';
   ctx.beginPath();ctx.arc(e.x,e.y+22,14,Math.PI,0);ctx.closePath();ctx.fill();ctx.stroke();
@@ -303,6 +319,7 @@ function drawWorld(t){
   ink(2.5);for(const [x,y,w,h] of MOUNTAINS){ctx.fillStyle='#f5f5f9';ctx.beginPath();ctx.moveTo(x-w/2,y);ctx.lineTo(x,y-h);ctx.lineTo(x+w/2,y);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-8,y-h+18);ctx.lineTo(x+2,y-h+30);ctx.lineTo(x-6,y-h+42);ctx.stroke();}
   sign();
   hand('Level 01',400,420,24);
+  hand('Coin',1240,545,16,'center'); hand('jump up',1130,930,14,'center');
   hand('Hintergrund',1120,410,20); arrow(1110,412,1075,470);
   hand('Start',420,1130,22); arrow(430,1140,430,1190);
   for(const [x,y] of TREES)tree(x,y);
@@ -317,6 +334,7 @@ function drawWorld(t){
   // moving platform
   ink(3);ctx.fillStyle='#2b2b30';ctx.fillRect(MOVER.x,MOVER.y,MOVER.w,MOVER.h);ctx.strokeRect(MOVER.x,MOVER.y,MOVER.w,MOVER.h);
   for(const h of HAZARDS)spikes(h);
+  for(const b of BOUNCERS)bouncer(b,t);
   door();
   COINS.forEach((c,i)=>{if(!coinsTaken[i])coin(c,t);});
   for(const e of ENEMIES)enemy(e);
@@ -341,7 +359,7 @@ function drawMenu(t){
   hand('a pencil & paper platformer',W/2,160,22,'center');
   if(showControls){
     const c=showControls==='controls'
-      ?['Move: Arrow keys or A / D','Jump: Space, W or Up (hold for higher)','Pause: Esc     Restart: R','Collect the coin, avoid spikes and','the spiky critters, reach the door.','','Press Enter or click to go back']
+      ?['Move: Arrow keys or A / D','Jump: Space, W or Up (hold for higher)','Pause: Esc     Restart: R','Collect the coin, avoid spikes and','the spiky critters, reach the portal.','','Press Enter or click to go back']
       :['Level design: the hand-drawn sketch','(Level 01, Hintergrund, Coins 01, Start)','Built as a 1:1 copy of the paper layout','on graph paper, with pencil ink.','','Press Enter or click to go back'];
     overlayBox(showControls==='controls'?'Controls':'Credits',c);return;
   }
@@ -364,7 +382,7 @@ function frame(now){
     drawWorld(t);
     if(state==='dead'){ctx.fillStyle='rgba(30,30,40,'+Math.min(0.6,(0.7-deadTimer)*1.5)+')';ctx.fillRect(0,0,W,H);hand('Ouch!',W/2,H/2,48,'center');}
     if(state==='pause')overlayBox('Paused',['Esc / Enter: continue','R: restart level','M: back to menu']);
-    if(state==='won')overlayBox('Level 01 complete!',['Coins: '+coins+'/'+COINS.length,'Time: '+finalTime.toFixed(1)+' s','Deaths: '+deaths,'','Enter: menu     R: play again']);
+    if(state==='won')overlayBox('Level 01 complete!',['You reached the portal!','Coins: '+coins+'/'+COINS.length,'Time: '+finalTime.toFixed(1)+' s','Deaths: '+deaths,'','Enter: menu     R: play again']);
   }
   requestAnimationFrame(frame);
 }
