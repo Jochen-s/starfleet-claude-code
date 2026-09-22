@@ -90,7 +90,7 @@ const LAUNCHERS=[
   {x:1120,y:593},
   {x:1670,y:818},
   {x:1800,y:953},
-  {x:900,y:1195,hover:true,baseY:1195,amp:28,speed:1.6},
+  {x:840,y:1205,hover:true,baseY:1205,amp:8,speed:2},
 ];
 const LAUNCH_VY=1000;
 const MOVER={x:760,y:505,w:110,h:35,minX:760,maxX:1050,speed:85,dir:1};
@@ -222,7 +222,7 @@ function updatePlay(dt){
   const hit={x:P.x+5,y:P.y+4,w:P.w-10,h:P.h-6};
   let die=false;
   for(const h of HAZARDS){ const inner=h.kind==='mouth'?{x:h.x,y:h.y+8,w:h.w,h:h.h-16}:{x:h.x,y:h.y+10,w:h.w,h:h.h-10}; if(h.kind==='down')inner.y=h.y; if(overlap(hit,inner))die=true; }
-  for(const e of LAUNCHERS){ if(overlap(hit,{x:e.x-16,y:e.y-4,w:32,h:26})){P.vy=-LAUNCH_VY;P.jumping=false;P.onGround=false;e.squash=1;jumpBuffer=0;} }
+  for(const e of LAUNCHERS){ if(overlap(hit,{x:e.x-16,y:e.y-6,w:32,h:32})){P.vy=-LAUNCH_VY;P.jumping=false;P.onGround=false;e.squash=1;jumpBuffer=0;} }
   if(P.y>WORLD.y1)die=true;
   if(die){deaths++;state='dead';deadTimer=0.7;return;}
   // coins
