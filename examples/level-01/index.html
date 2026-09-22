@@ -286,6 +286,10 @@ function enemy(e){
   ctx.beginPath();for(let a=-70;a<=70;a+=35){const r=a*Math.PI/180;ctx.moveTo(e.x+Math.sin(r)*14,e.y+22-Math.cos(r)*14);ctx.lineTo(e.x+Math.sin(r)*21,e.y+22-Math.cos(r)*21);}ctx.stroke();
   ctx.fillStyle='#1d1d22';ctx.beginPath();ctx.arc(e.x-4,e.y+16,1.8,0,7);ctx.arc(e.x+4,e.y+16,1.8,0,7);ctx.fill();
   ctx.restore();
+  // animated "launch up" chevrons so players know the dome fires them upward
+  const ph=(performance.now()/600)%1;ink(2);ctx.strokeStyle='rgba(29,29,34,'+(0.9-ph*0.7)+')';
+  const cy=e.y-6-ph*18;ctx.beginPath();ctx.moveTo(e.x-8,cy+6);ctx.lineTo(e.x,cy-2);ctx.lineTo(e.x+8,cy+6);ctx.stroke();
+  ctx.strokeStyle='rgba(29,29,34,'+(0.5-ph*0.4)+')';ctx.beginPath();ctx.moveTo(e.x-8,cy+16);ctx.lineTo(e.x,cy+8);ctx.lineTo(e.x+8,cy+16);ctx.stroke();
 }
 function coin(c,t){
   ink(2.5);const s=1+Math.sin(t*4)*0.08;ctx.save();ctx.translate(c.x,c.y);ctx.scale(s,1);
